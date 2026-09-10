@@ -1,0 +1,777 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+:root {
+  --background: #020810;
+  --foreground: #B8CDD8;
+  --primary: #1A8FD8;
+  --primary-foreground: #020810;
+  --secondary: #071020;
+  --secondary-foreground: #6A8AA8;
+  --accent: #FFB800;
+  --accent-foreground: #020810;
+  --muted: #0A1828;
+  --muted-foreground: #3A5A78;
+  --card: #050E1C;
+  --card-foreground: #B8CDD8;
+  --border: #0E2040;
+  --input: #071020;
+  --ring: #FFB800;
+  --radius: 3px;
+  --font-sans: var(--font-plus-jakarta-sans), sans-serif;
+
+  --critical: #FF2020;
+  --critical-bg: #180606;
+  --high: #FF5A00;
+  --high-bg: #180C04;
+  --medium: #F5C000;
+  --medium-bg: #181600;
+  --informational: #0080FF;
+  --informational-bg: #040C18;
+  --acknowledged: #00CC60;
+  --acknowledged-bg: #031608;
+  --pending: #F5C000;
+  --overdue: #FF2020;
+
+  /* Aviation-specific tokens */
+  --cockpit-green: #00FF88;
+  --cockpit-amber: #FFB800;
+  --cockpit-red: #FF2020;
+  --cockpit-blue: #00AAFF;
+  --cockpit-cyan: #00E5FF;
+  --cockpit-dim: rgba(0, 255, 136, 0.05);
+  --instrument-border: rgba(255, 184, 0, 0.18);
+  --instrument-glow: 0 0 16px rgba(255, 184, 0, 0.12), 0 0 1px rgba(255, 184, 0, 0.5);
+  --panel-bg: linear-gradient(180deg, #071020 0%, #020810 100%);
+  --scanline-opacity: 0.03;
+  --grid-color: rgba(255, 184, 0, 0.03);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+      radial-gradient(ellipse at 15% 0%, rgba(255, 184, 0, 0.04) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 100%, rgba(0, 170, 255, 0.03) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.4) 0%, transparent 80%);
+    background-size: 48px 48px, 48px 48px, 100% 100%, 100% 100%, 100% 100%;
+    background-attachment: fixed;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6, p {
+    margin: 0;
+  }
+
+  /* Cockpit-style selection */
+  ::selection {
+    background: rgba(255, 184, 0, 0.2);
+    color: var(--cockpit-amber);
+  }
+}
+
+@layer utilities {
+  .font-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .font-mono-avionics {
+    font-family: 'Share Tech Mono', 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+  }
+
+  .font-orbitron {
+    font-family: 'Orbitron', 'Share Tech Mono', monospace;
+    letter-spacing: 0.08em;
+  }
+
+  .font-rajdhani {
+    font-family: 'Rajdhani', 'Share Tech Mono', sans-serif;
+    letter-spacing: 0.04em;
+  }
+
+  .text-hero-metric {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-family: 'Orbitron', 'Share Tech Mono', monospace;
+  }
+
+  .text-avionics {
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    color: var(--secondary-foreground);
+  }
+
+  .text-hud {
+    font-family: 'Orbitron', 'Share Tech Mono', monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 184, 0, 0.15) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 184, 0, 0.2);
+    border-radius: 1px;
+  }
+
+  /* Instrument panel card glow */
+  .card-glow-gold {
+    box-shadow: 0 0 0 1px var(--instrument-border), var(--instrument-glow), inset 0 1px 0 rgba(255,184,0,0.05);
+  }
+
+  .card-glow-critical {
+    box-shadow: 0 0 0 1px rgba(255, 32, 32, 0.4), 0 0 20px rgba(255, 32, 32, 0.12), inset 0 1px 0 rgba(255,32,32,0.05);
+  }
+
+  .card-glow-green {
+    box-shadow: 0 0 0 1px rgba(0, 204, 96, 0.3), 0 0 20px rgba(0, 204, 96, 0.08), inset 0 1px 0 rgba(0,204,96,0.04);
+  }
+
+  .card-glow-blue {
+    box-shadow: 0 0 0 1px rgba(0, 170, 255, 0.25), 0 0 20px rgba(0, 170, 255, 0.08), inset 0 1px 0 rgba(0,170,255,0.04);
+  }
+
+  /* Cockpit instrument ring */
+  .instrument-ring {
+    border: 1px solid var(--instrument-border);
+    box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.6), var(--instrument-glow);
+    border-radius: 50%;
+  }
+
+  /* Scanline overlay effect */
+  .scanlines {
+    position: relative;
+  }
+
+  .scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, var(--scanline-opacity)) 2px,
+      rgba(0, 0, 0, var(--scanline-opacity)) 4px
+    );
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 1;
+  }
+
+  /* HUD-style corner brackets */
+  .hud-bracket {
+    position: relative;
+  }
+
+  .hud-bracket::before,
+  .hud-bracket::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: var(--cockpit-amber);
+    border-style: solid;
+    opacity: 0.45;
+  }
+
+  .hud-bracket::before {
+    top: 0;
+    left: 0;
+    border-width: 1px 0 0 1px;
+  }
+
+  .hud-bracket::after {
+    bottom: 0;
+    right: 0;
+    border-width: 0 1px 1px 0;
+  }
+
+  /* Full corner brackets (all 4 corners) */
+  .hud-bracket-full {
+    position: relative;
+  }
+
+  .hud-bracket-full::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    border-top: 1px solid var(--cockpit-amber);
+    border-left: 1px solid var(--cockpit-amber);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .hud-bracket-full::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-bottom: 1px solid var(--cockpit-amber);
+    border-right: 1px solid var(--cockpit-amber);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Status indicator dot with glow */
+  .status-dot-green {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cockpit-green);
+    box-shadow: 0 0 8px var(--cockpit-green), 0 0 16px rgba(0,255,136,0.3);
+    animation: statusPulse 2.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  .status-dot-amber {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cockpit-amber);
+    box-shadow: 0 0 8px var(--cockpit-amber), 0 0 16px rgba(255,184,0,0.3);
+    animation: statusPulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  .status-dot-red {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cockpit-red);
+    box-shadow: 0 0 10px var(--cockpit-red), 0 0 20px rgba(255,32,32,0.4);
+    animation: statusPulse 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  .status-dot-blue {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cockpit-blue);
+    box-shadow: 0 0 8px var(--cockpit-blue);
+    flex-shrink: 0;
+  }
+
+  .sidebar-transition {
+    transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .fade-in {
+    animation: fadeIn 200ms ease-out forwards;
+  }
+
+  .slide-up {
+    animation: slideUp 200ms ease-out forwards;
+  }
+
+  .pulse-gold {
+    animation: pulseGold 2s ease-in-out infinite;
+  }
+
+  .pulse-red {
+    animation: pulseRed 1.5s ease-in-out infinite;
+  }
+
+  /* Amber glow text */
+  .text-glow-amber {
+    text-shadow: 0 0 10px rgba(255, 184, 0, 0.5), 0 0 20px rgba(255, 184, 0, 0.2);
+  }
+
+  .text-glow-green {
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5), 0 0 20px rgba(0, 255, 136, 0.2);
+  }
+
+  .text-glow-red {
+    text-shadow: 0 0 10px rgba(255, 32, 32, 0.6), 0 0 20px rgba(255, 32, 32, 0.3);
+  }
+
+  .text-glow-blue {
+    text-shadow: 0 0 10px rgba(0, 170, 255, 0.5), 0 0 20px rgba(0, 170, 255, 0.2);
+  }
+
+  /* Instrument panel top accent line */
+  .panel-top-accent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 184, 0, 0.4) 30%, rgba(255, 184, 0, 0.6) 50%, rgba(255, 184, 0, 0.4) 70%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* Cockpit vignette */
+  .cockpit-vignette {
+    box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.5);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulseGold {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 184, 0, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(255, 184, 0, 0); }
+  }
+
+  @keyframes pulseRed {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 32, 32, 0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(255, 32, 32, 0); }
+  }
+
+  @keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  @keyframes radarSweep {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes dataScroll {
+    from { transform: translateY(0); }
+    to { transform: translateY(-50%); }
+  }
+
+  @keyframes ambientGlow {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes scanlineMove {
+    from { background-position: 0 0; }
+    to { background-position: 0 100%; }
+  }
+
+  @keyframes flickerIn {
+    0% { opacity: 0; }
+    10% { opacity: 0.8; }
+    15% { opacity: 0.2; }
+    20% { opacity: 0.9; }
+    25% { opacity: 0.4; }
+    30% { opacity: 1; }
+    100% { opacity: 1; }
+  }
+
+  .nav-active {
+    background: linear-gradient(90deg, rgba(255, 184, 0, 0.12) 0%, rgba(255, 184, 0, 0.03) 100%);
+    border-left: 2px solid var(--cockpit-amber);
+    box-shadow: inset 0 0 20px rgba(255, 184, 0, 0.04);
+  }
+
+  .gradient-brand {
+    background: linear-gradient(180deg, #020810 0%, #050E1C 50%, #071020 100%);
+  }
+
+  .gradient-card {
+    background: linear-gradient(135deg, #050E1C 0%, #071020 100%);
+  }
+
+  /* Instrument panel gradient */
+  .gradient-instrument {
+    background: linear-gradient(180deg, #071020 0%, #050E1C 60%, #020810 100%);
+  }
+
+  .ack-progress-bar {
+    background: linear-gradient(90deg, #00CC60 0%, #009A48 100%);
+    border-radius: 1px;
+    height: 3px;
+    transition: width 600ms ease;
+    box-shadow: 0 0 8px rgba(0, 204, 96, 0.5);
+  }
+
+  /* Altitude tape / progress bar style */
+  .altitude-bar {
+    background: linear-gradient(90deg, var(--cockpit-amber) 0%, rgba(255, 184, 0, 0.5) 100%);
+    border-radius: 1px;
+    box-shadow: 0 0 10px rgba(255, 184, 0, 0.4);
+  }
+
+  /* Runway centerline divider */
+  .runway-divider {
+    background: repeating-linear-gradient(
+      90deg,
+      var(--border) 0px,
+      var(--border) 12px,
+      transparent 12px,
+      transparent 20px
+    );
+    height: 1px;
+  }
+
+  /* Instrument grid overlay */
+  .instrument-grid {
+    background-image:
+      linear-gradient(rgba(255, 184, 0, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 184, 0, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Cockpit panel rivet effect */
+  .panel-rivet {
+    position: relative;
+  }
+
+  .panel-rivet::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,184,0,0.3) 0%, rgba(255,184,0,0.05) 100%);
+    border: 1px solid rgba(255,184,0,0.15);
+  }
+
+  /* Ticker tape / data feed style */
+  .data-ticker {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cockpit-green);
+    white-space: nowrap;
+  }
+
+  /* Bevel border for cockpit panels */
+  .bevel-border {
+    border: 1px solid var(--border);
+    box-shadow:
+      inset 1px 1px 0 rgba(255,255,255,0.03),
+      inset -1px -1px 0 rgba(0,0,0,0.3);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-semibold text-sm transition-all duration-150 active:scale-95;
+    background: linear-gradient(180deg, #FFC200 0%, #E6A800 100%);
+    color: #020810;
+    border-radius: 2px;
+    border: 1px solid rgba(255, 184, 0, 0.5);
+    box-shadow: 0 0 16px rgba(255, 184, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0,0,0,0.2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    font-family: 'Rajdhani', 'Share Tech Mono', sans-serif;
+    font-weight: 700;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(180deg, #FFD000 0%, #FFC200 100%);
+    box-shadow: 0 0 24px rgba(255, 184, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-semibold text-sm transition-all duration-150 active:scale-95;
+    background: linear-gradient(180deg, #0A1828 0%, #071020 100%);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    font-family: 'Rajdhani', 'Share Tech Mono', sans-serif;
+    font-weight: 600;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 -1px 0 rgba(0,0,0,0.2);
+  }
+
+  .btn-secondary:hover {
+    background: linear-gradient(180deg, #0E2040 0%, #0A1828 100%);
+    border-color: rgba(255, 184, 0, 0.3);
+    box-shadow: 0 0 8px rgba(255,184,0,0.08);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-2 text-sm transition-all duration-150 active:scale-95;
+    color: var(--muted-foreground);
+    border-radius: 2px;
+  }
+
+  .btn-ghost:hover {
+    background-color: rgba(255, 184, 0, 0.06);
+    color: var(--foreground);
+    box-shadow: 0 0 8px rgba(255,184,0,0.05);
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2.5 text-sm outline-none transition-all duration-150;
+    background: linear-gradient(180deg, #040C18 0%, #071020 100%);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    border-radius: 2px;
+    font-family: inherit;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  .input-field::placeholder {
+    color: var(--muted-foreground);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+  }
+
+  .input-field:focus {
+    border-color: rgba(255, 184, 0, 0.5);
+    box-shadow: 0 0 0 2px rgba(255, 184, 0, 0.08), 0 0 12px rgba(255, 184, 0, 0.12), inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  .input-field:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .label-field {
+    @apply block text-xs font-medium mb-1.5;
+    color: var(--secondary-foreground);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* Instrument panel card */
+  .card-surface {
+    @apply border relative overflow-hidden;
+    background: linear-gradient(160deg, #050E1C 0%, #020810 100%);
+    border-color: var(--border);
+    border-radius: 3px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.02), inset 0 -1px 0 rgba(0,0,0,0.3);
+  }
+
+  .card-surface::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 184, 0, 0.2) 30%, rgba(255, 184, 0, 0.35) 50%, rgba(255, 184, 0, 0.2) 70%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* Cockpit panel — heavier version */
+  .cockpit-panel {
+    @apply border relative overflow-hidden;
+    background: linear-gradient(160deg, #071020 0%, #040C18 60%, #020810 100%);
+    border-color: rgba(255, 184, 0, 0.12);
+    border-radius: 3px;
+    box-shadow:
+      0 4px 16px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.03),
+      inset 0 -1px 0 rgba(0,0,0,0.4),
+      inset 1px 0 0 rgba(255,255,255,0.01),
+      inset -1px 0 0 rgba(0,0,0,0.2);
+  }
+
+  .cockpit-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 184, 0, 0.3) 25%, rgba(255, 184, 0, 0.5) 50%, rgba(255, 184, 0, 0.3) 75%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .badge-critical {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold;
+    background-color: rgba(255, 32, 32, 0.1);
+    color: #FF2020;
+    border: 1px solid rgba(255, 32, 32, 0.3);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+    box-shadow: 0 0 8px rgba(255,32,32,0.1);
+  }
+
+  .badge-high {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold;
+    background-color: rgba(255, 90, 0, 0.1);
+    color: #FF5A00;
+    border: 1px solid rgba(255, 90, 0, 0.3);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .badge-medium {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold;
+    background-color: rgba(245, 192, 0, 0.1);
+    color: #F5C000;
+    border: 1px solid rgba(245, 192, 0, 0.3);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .badge-informational {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold;
+    background-color: rgba(0, 128, 255, 0.1);
+    color: #0080FF;
+    border: 1px solid rgba(0, 128, 255, 0.3);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .badge-active {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold;
+    background-color: rgba(0, 204, 96, 0.1);
+    color: #00CC60;
+    border: 1px solid rgba(0, 204, 96, 0.3);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+    box-shadow: 0 0 8px rgba(0,204,96,0.1);
+  }
+
+  .badge-acknowledged {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold;
+    background-color: rgba(0, 204, 96, 0.1);
+    color: #00CC60;
+    border: 1px solid rgba(0, 204, 96, 0.3);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .badge-pending {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold;
+    background-color: rgba(245, 192, 0, 0.1);
+    color: #F5C000;
+    border: 1px solid rgba(245, 192, 0, 0.3);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .badge-overdue {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold;
+    background-color: rgba(255, 32, 32, 0.1);
+    color: #FF2020;
+    border: 1px solid rgba(255, 32, 32, 0.3);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .badge-expired {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold;
+    background-color: rgba(58, 90, 120, 0.12);
+    color: var(--muted-foreground);
+    border: 1px solid rgba(58, 90, 120, 0.2);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .badge-draft {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold;
+    background-color: rgba(58, 90, 120, 0.12);
+    color: var(--muted-foreground);
+    border: 1px solid rgba(58, 90, 120, 0.2);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* Cockpit section header */
+  .section-header-cockpit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 184, 0, 0.1);
+    margin-bottom: 12px;
+  }
+
+  .section-header-cockpit::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--cockpit-amber) 0%, rgba(255,184,0,0.3) 100%);
+    border-radius: 1px;
+    box-shadow: 0 0 6px rgba(255,184,0,0.4);
+    flex-shrink: 0;
+  }
+}
