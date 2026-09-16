@@ -3,6 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import AirlineLogo from '@/components/ui/AirlineLogo';
 import { notices, airlines } from '@/app/notice-management/components/noticeData';
+import { sendOverdueAckEscalation, sendSignatureFailureAlert, sendDistributionFailureAlert } from '@/lib/escalationEmailService';
+import { toast } from 'sonner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -815,6 +817,89 @@ export default function AcknowledgementTrackerContent() {
   const [sigFilter, setSigFilter] = useState<'all' | 'acknowledged' | 'opened' | 'pending' | 'overdue'>('all');
   const [liveTime, setLiveTime] = useState('');
   const [noticeSearch, setNoticeSearch] = useState('');
+  const [escalatingSending, setEscalatingSending] = useState<string | null>(null);
+
+  const handleSendOverdueEscalation = useCallback(async (airlineName: string, escalationLevel: 1 | 2 | 3, noticeRef: string, noticeTitle: string, priority: string) => {
+    const key = `overdue-${airlineName}-${escalationLevel}`;
+    setEscalatingSending(key);
+    try {
+      let result = await sendOverdueAckEscalation({
+        noticeRef,
+        noticeTitle,
+        priority,
+        airlineName,
+        managerName: `${airlineName} Station Manager`,
+        managerEmail: `station.mgr@${airlineName.toLowerCase().replace(/\s+/g, '')}.com`,
+        escalationLevel,
+        stationManagerEmail: escalationLevel === 3 ? 'ops.head@meag-aviation.com' : undefined,
+        regionalManagerEmail: escalationLevel === 3 ? 'admin@meag-aviation.com' : undefined,
+      });
+      if (result.success) {
+        toast.success(`Overdue escalation email sent to ${airlineName}`);
+      } else {
+        toast.error(`Failed: ${result.error}`);
+      }
+    } catch {
+      toast.error('Escalation email failed');
+    } finally {
+      setEscalatingSending(null);
+    }
+  }, []);
+
+  const handleSendSigFailure = useCallback(async (recipient: RecipientSignature, noticeRef: string, noticeTitle: string, priority: string) => {
+    const key = `sig-${recipient.id}`;
+    setEscalatingSending(key);
+    try {
+      let result = await sendSignatureFailureAlert({
+        noticeRef,
+        noticeTitle,
+        priority,
+        airlineName: recipient.airline,
+        recipientName: recipient.name,
+        recipientEmail: recipient.email,
+        failureReason: 'Digital signature not completed — acknowledgement pending',
+        attemptCount: 1,
+        managerEmail: `station.mgr@${recipient.airline.toLowerCase().replace(/\s+/g, '')}.com`,
+        stationManagerEmail: 'ops.head@meag-aviation.com',
+      });
+      if (result.success) {
+        toast.success(`Signature failure alert sent for ${recipient.name}`);
+      } else {
+        toast.error(`Failed: ${result.error}`);
+      }
+    } catch {
+      toast.error('Signature failure alert failed');
+    } finally {
+      setEscalatingSending(null);
+    }
+  }, []);
+
+  const handleSendDistributionFailure = useCallback(async (failedAirlines: string[], noticeRef: string, noticeTitle: string, priority: string, totalTargeted: number) => {
+    const key = `dist-${noticeRef}`;
+    setEscalatingSending(key);
+    try {
+      let result = await sendDistributionFailureAlert({
+        noticeRef,
+        noticeTitle,
+        priority,
+        failedAirlines,
+        totalTargeted,
+        failureReason: 'Airlines did not receive the notice — distribution failure detected',
+        distributionId: `DIST-${noticeRef}-${Date.now()}`,
+        managerEmail: 'ops.manager@meag-aviation.com',
+        adminEmail: 'admin@meag-aviation.com',
+      });
+      if (result.success) {
+        toast.success(`Distribution failure alert sent for ${failedAirlines.length} airline(s)`);
+      } else {
+        toast.error(`Failed: ${result.error}`);
+      }
+    } catch {
+      toast.error('Distribution failure alert failed');
+    } finally {
+      setEscalatingSending(null);
+    }
+  }, []);
 
   useEffect(() => {
     const tick = () => setLiveTime(new Date().toISOString().slice(11, 19) + 'Z');
@@ -1175,10 +1260,52 @@ export default function AcknowledgementTrackerContent() {
                     </div>
                   </div>
                 </div>
+
+                {/* Distribution Failure Alert — for non-responsive airlines */}
+                {kpi.noneAirlines > 0 && (
+                  <div
+                    className="rounded-lg p-4 flex items-start gap-3"
+                    style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)' }}
+                  >
+                    <Icon name="ExclamationTriangleIcon" size={18} style={{ color: '#EF4444', flexShrink: 0, marginTop: 2 } as React.CSSProperties} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold mb-1" style={{ color: '#EF4444', fontFamily: "'Rajdhani', sans-serif" }}>
+                        Distribution Failure Detected — {kpi.noneAirlines} Airline{kpi.noneAirlines > 1 ? 's' : ''} Unreached
+                      </p>
+                      <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.55rem' }}>
+                        {kpi.noneAirlines} airline(s) show 0% acknowledgement for {selectedNotice.refNumber}. This may indicate a distribution failure.
+                      </p>
+                      <button
+                        onClick={() => {
+                          const failedAirlines = heatmap.filter((c) => c.status === 'none').map((c) => c.airline);
+                          handleSendDistributionFailure(
+                            failedAirlines,
+                            selectedNotice.refNumber,
+                            selectedNotice.title,
+                            selectedNotice.priority,
+                            selectedNotice.targetAirlines.length,
+                          );
+                        }}
+                        disabled={!!escalatingSending}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all"
+                        style={{
+                          background: 'rgba(239,68,68,0.15)',
+                          color: '#EF4444',
+                          border: '1px solid rgba(239,68,68,0.4)',
+                          opacity: escalatingSending ? 0.5 : 1,
+                          fontFamily: "'Share Tech Mono', monospace",
+                          fontSize: '0.55rem',
+                        }}
+                        title="Send distribution failure alert to operations manager"
+                      >
+                        <Icon name="PaperAirplaneIcon" size={12} />
+                        {escalatingSending === `dist-${selectedNotice.refNumber}` ? 'Sending Alert…' : 'Send Distribution Failure Alert'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-
-            {/* ── TIMELINE TAB ── */}
             {activeTab === 'timeline' && (
               <div className="flex flex-col gap-4">
                 <p className="text-2xs uppercase tracking-widest" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace" }}>
@@ -1274,16 +1401,19 @@ export default function AcknowledgementTrackerContent() {
                   {filteredRecipients.map((r) => {
                     const sc = statusColor(r.status);
                     return (
-                      <button
+                      <div
                         key={r.id}
-                        onClick={() => setDrillRecipient(r)}
-                        className="text-left rounded-lg p-4 transition-all duration-150 group"
+                        className="rounded-lg p-4 transition-all duration-150"
                         style={{
                           background: 'var(--card)',
                           border: `1px solid ${drillRecipient?.id === r.id ? sc : 'var(--border)'}`,
                           boxShadow: drillRecipient?.id === r.id ? `0 0 12px ${sc}20` : 'none',
                         }}
                       >
+                        <button
+                          onClick={() => setDrillRecipient(r)}
+                          className="w-full text-left"
+                        >
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="min-w-0">
                             <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif" }}>{r.name}</p>
@@ -1322,7 +1452,54 @@ export default function AcknowledgementTrackerContent() {
                             </div>
                           )}
                         </div>
-                      </button>
+                        </button>
+
+                        {/* Escalation action buttons for non-acknowledged recipients */}
+                        {r.status !== 'acknowledged' && (
+                          <div className="flex items-center gap-1.5 mt-2 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+                            {r.status === 'overdue' && (
+                              <button
+                                onClick={() => handleSendOverdueEscalation(r.airline, 3, selectedNotice.refNumber, selectedNotice.title, selectedNotice.priority)}
+                                disabled={!!escalatingSending}
+                                className="flex items-center gap-1 px-2 py-1 rounded text-2xs font-bold transition-all"
+                                style={{
+                                  background: 'rgba(239,68,68,0.12)',
+                                  color: '#EF4444',
+                                  border: '1px solid rgba(239,68,68,0.35)',
+                                  opacity: escalatingSending ? 0.5 : 1,
+                                  fontFamily: "'Share Tech Mono', monospace",
+                                  fontSize: '0.45rem',
+                                  whiteSpace: 'nowrap',
+                                }}
+                                title={`Send overdue escalation for ${r.name}`}
+                              >
+                                <Icon name="BellAlertIcon" size={9} />
+                                {escalatingSending === `overdue-${r.airline}-3` ? 'Sending…' : 'Escalate'}
+                              </button>
+                            )}
+                            {selectedNotice.requiresSignature && !r.signatureRef && (
+                              <button
+                                onClick={() => handleSendSigFailure(r, selectedNotice.refNumber, selectedNotice.title, selectedNotice.priority)}
+                                disabled={!!escalatingSending}
+                                className="flex items-center gap-1 px-2 py-1 rounded text-2xs font-bold transition-all"
+                                style={{
+                                  background: 'rgba(30,144,255,0.1)',
+                                  color: '#1E90FF',
+                                  border: '1px solid rgba(30,144,255,0.3)',
+                                  opacity: escalatingSending ? 0.5 : 1,
+                                  fontFamily: "'Share Tech Mono', monospace",
+                                  fontSize: '0.45rem',
+                                  whiteSpace: 'nowrap',
+                                }}
+                                title={`Alert signature failure for ${r.name}`}
+                              >
+                                <Icon name="FingerPrintIcon" size={9} />
+                                {escalatingSending === `sig-${r.id}` ? 'Sending…' : 'Sig Alert'}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                   {filteredRecipients.length === 0 && (

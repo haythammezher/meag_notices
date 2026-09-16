@@ -3,6 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import AirlineLogo from '@/components/ui/AirlineLogo';
 import { notices, airlines } from '@/app/notice-management/components/noticeData';
+import { sendOverdueAckEscalation, sendSignatureFailureAlert } from '@/lib/escalationEmailService';
+import { toast } from 'sonner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -288,13 +290,7 @@ export default function NoticeAckStatusContent() {
   const [statusFilter, setStatusFilter] = useState<RecipientStatus | 'all'>('all');
   const [noticeSearch, setNoticeSearch] = useState('');
   const [liveTime, setLiveTime] = useState('');
-
-  useEffect(() => {
-    const tick = () => setLiveTime(new Date().toISOString().slice(11, 19) + 'Z');
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
+  const [escalatingSending, setEscalatingSending] = useState<string | null>(null);
 
   const activeNotices = useMemo(() => notices.filter((n) => n.status === 'Active' || n.status === 'Expired'), []);
   const filteredNotices = useMemo(() => {
@@ -306,6 +302,68 @@ export default function NoticeAckStatusContent() {
   const selectedNotice = useMemo(() => notices.find((n) => n.id === selectedNoticeId) ?? notices[0], [selectedNoticeId]);
 
   const airlineSummaries = useMemo(() => buildAirlineSummaries(selectedNotice), [selectedNotice]);
+
+  const handleSendEscalation = useCallback(async (airline: string, escalationLevel: 1 | 2 | 3) => {
+    const key = `${airline}-${escalationLevel}`;
+    setEscalatingSending(key);
+    try {
+      const result = await sendOverdueAckEscalation({
+        noticeRef: selectedNotice.refNumber,
+        noticeTitle: selectedNotice.title,
+        priority: selectedNotice.priority,
+        airlineName: airline,
+        managerName: `${airline} Station Manager`,
+        managerEmail: `station.mgr@${airline.toLowerCase().replace(/\s+/g, '')}.com`,
+        escalationLevel,
+        stationManagerEmail: escalationLevel === 3 ? 'ops.head@meag-aviation.com' : undefined,
+        regionalManagerEmail: escalationLevel === 3 ? 'admin@meag-aviation.com' : undefined,
+      });
+      if (result.success) {
+        toast.success(`Escalation email sent to ${airline} (Level ${escalationLevel})`);
+      } else {
+        toast.error(`Failed to send escalation: ${result.error}`);
+      }
+    } catch {
+      toast.error('Escalation email failed');
+    } finally {
+      setEscalatingSending(null);
+    }
+  }, [selectedNotice]);
+
+  const handleSendSignatureFailure = useCallback(async (recipient: Recipient) => {
+    const key = `sig-${recipient.id}`;
+    setEscalatingSending(key);
+    try {
+      const result = await sendSignatureFailureAlert({
+        noticeRef: selectedNotice.refNumber,
+        noticeTitle: selectedNotice.title,
+        priority: selectedNotice.priority,
+        airlineName: recipient.airline,
+        recipientName: recipient.name,
+        recipientEmail: recipient.email,
+        failureReason: 'Signature validation failed — recipient did not complete digital signature',
+        attemptCount: 1,
+        managerEmail: `station.mgr@${recipient.airline.toLowerCase().replace(/\s+/g, '')}.com`,
+        stationManagerEmail: 'ops.head@meag-aviation.com',
+      });
+      if (result.success) {
+        toast.success(`Signature failure alert sent for ${recipient.name}`);
+      } else {
+        toast.error(`Failed to send alert: ${result.error}`);
+      }
+    } catch {
+      toast.error('Signature failure alert failed');
+    } finally {
+      setEscalatingSending(null);
+    }
+  }, [selectedNotice]);
+
+  useEffect(() => {
+    const tick = () => setLiveTime(new Date().toISOString().slice(11, 19) + 'Z');
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const allRecipients = useMemo(() => {
     const airlinesToShow = drillAirline ? [drillAirline] : selectedNotice.targetAirlines;
@@ -615,6 +673,38 @@ export default function NoticeAckStatusContent() {
                               </span>
                             )}
                           </div>
+
+                          {/* Escalation email trigger — shown for non-nominal airlines */}
+                          {a.escalationStage > 0 && (
+                            <div className="flex items-center gap-1.5 mt-2 pt-2" style={{ borderTop: '1px solid var(--border)' }} onClick={(e) => e.stopPropagation()}>
+                              {([1, 2, 3] as const).filter((lvl) => lvl >= a.escalationStage).slice(0, 1).map((lvl) => {
+                                const lvlColor = lvl === 1 ? '#EAB308' : lvl === 2 ? '#F97316' : '#EF4444';
+                                const lvlLabel = lvl === 1 ? '12h Reminder' : lvl === 2 ? '24h Reminder' : '48h Escalation';
+                                const sendKey = `${a.airline}-${lvl}`;
+                                const isSending = escalatingSending === sendKey;
+                                return (
+                                  <button
+                                    key={lvl}
+                                    onClick={() => handleSendEscalation(a.airline, lvl)}
+                                    disabled={!!escalatingSending}
+                                    className="flex items-center gap-1 px-2 py-1 rounded text-2xs font-bold transition-all"
+                                    style={{
+                                      background: `${lvlColor}15`,
+                                      color: lvlColor,
+                                      border: `1px solid ${lvlColor}40`,
+                                      opacity: escalatingSending && !isSending ? 0.5 : 1,
+                                      fontFamily: "'Share Tech Mono', monospace",
+                                      fontSize: '0.48rem',
+                                    }}
+                                    title={`Send ${lvlLabel} to ${a.airline}`}
+                                  >
+                                    <Icon name="PaperAirplaneIcon" size={9} />
+                                    {isSending ? 'Sending…' : `Send ${lvlLabel}`}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
                         </button>
                       );
                     })}
@@ -713,6 +803,50 @@ export default function NoticeAckStatusContent() {
                           <span className="text-2xs font-bold px-2 py-0.5 rounded flex-shrink-0" style={{ background: `${sc}15`, color: sc, border: `1px solid ${sc}30`, fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem' }}>
                             {statusLabel(r.status)}
                           </span>
+
+                          {/* Escalation action buttons */}
+                          <div className="flex flex-col gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            {r.status === 'overdue' && (
+                              <button
+                                onClick={() => handleSendEscalation(r.airline, 3)}
+                                disabled={!!escalatingSending}
+                                className="flex items-center gap-1 px-2 py-1 rounded text-2xs font-bold transition-all"
+                                style={{
+                                  background: 'rgba(239,68,68,0.12)',
+                                  color: '#EF4444',
+                                  border: '1px solid rgba(239,68,68,0.35)',
+                                  opacity: escalatingSending ? 0.5 : 1,
+                                  fontFamily: "'Share Tech Mono', monospace",
+                                  fontSize: '0.45rem',
+                                  whiteSpace: 'nowrap',
+                                }}
+                                title={`Send overdue escalation to ${r.airline}`}
+                              >
+                                <Icon name="BellAlertIcon" size={9} />
+                                {escalatingSending === `${r.airline}-3` ? 'Sending…' : 'Escalate'}
+                              </button>
+                            )}
+                            {selectedNotice.requiresSignature && r.status !== 'acknowledged' && (
+                              <button
+                                onClick={() => handleSendSignatureFailure(r)}
+                                disabled={!!escalatingSending}
+                                className="flex items-center gap-1 px-2 py-1 rounded text-2xs font-bold transition-all"
+                                style={{
+                                  background: 'rgba(30,144,255,0.1)',
+                                  color: '#1E90FF',
+                                  border: '1px solid rgba(30,144,255,0.3)',
+                                  opacity: escalatingSending ? 0.5 : 1,
+                                  fontFamily: "'Share Tech Mono', monospace",
+                                  fontSize: '0.45rem',
+                                  whiteSpace: 'nowrap',
+                                }}
+                                title={`Alert signature failure for ${r.name}`}
+                              >
+                                <Icon name="FingerPrintIcon" size={9} />
+                                {escalatingSending === `sig-${r.id}` ? 'Sending…' : 'Sig Alert'}
+                              </button>
+                            )}
+                          </div>
                         </button>
                       );
                     })}
