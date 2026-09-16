@@ -29,6 +29,7 @@ const navItems: NavItem[] = [
   { id: 'nav-reports', label: 'Reporting Dashboard', href: '/reporting-dashboard', icon: 'ChartBarIcon', group: 'Compliance', hideForViewers: true },
   { id: 'nav-airline-compliance', label: 'Airline Compliance', href: '/airline-compliance-status', icon: 'BuildingOffice2Icon', group: 'Compliance' },
   { id: 'nav-audit', label: 'Compliance & Audit Export', href: '/compliance-audit-export', icon: 'ShieldCheckIcon', group: 'Compliance' },
+  { id: 'nav-compliance-report', label: 'Compliance Reports', href: '/compliance-report', icon: 'DocumentChartBarIcon', group: 'Compliance' },
   { id: 'nav-notifications', label: 'Notifications', href: '/notifications', icon: 'InboxIcon', group: 'Administration' },
   { id: 'nav-users', label: 'User Access Management', href: '/user-access-management', icon: 'UsersIcon', group: 'Administration', adminOnly: true },
   { id: 'nav-directory', label: 'Airline Directory', href: '/notice-management', icon: 'BuildingOfficeIcon', group: 'Administration' },
