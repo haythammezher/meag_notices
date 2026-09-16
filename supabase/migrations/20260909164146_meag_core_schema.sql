@@ -3,27 +3,45 @@
 -- ============================================================
 
 -- 1. TYPES
-DROP TYPE IF EXISTS public.user_role CASCADE;
-CREATE TYPE public.user_role AS ENUM ('administrator', 'dept_head', 'publisher', 'airline_manager', 'viewer');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.user_role AS ENUM ('administrator', 'dept_head', 'publisher', 'airline_manager', 'viewer');
+  END IF;
+END $$;
 
-DROP TYPE IF EXISTS public.notice_priority CASCADE;
-CREATE TYPE public.notice_priority AS ENUM ('Critical', 'High', 'Medium', 'Informational');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_priority' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.notice_priority AS ENUM ('Critical', 'High', 'Medium', 'Informational');
+  END IF;
+END $$;
 
-DROP TYPE IF EXISTS public.notice_status CASCADE;
-CREATE TYPE public.notice_status AS ENUM ('Active', 'Draft', 'Pending Approval', 'Expired');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_status' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.notice_status AS ENUM ('Active', 'Draft', 'Pending Approval', 'Expired');
+  END IF;
+END $$;
 
-DROP TYPE IF EXISTS public.notice_type CASCADE;
-CREATE TYPE public.notice_type AS ENUM (
-  'Safety Flash', 'Operational Instructions', 'Airside Notice',
-  'Ground Handling Procedures', 'Security Directive', 'Flight Operations Update',
-  'Emergency Notification', 'Service Bulletin', 'Airline Memo', 'Regulatory Update'
-);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_type' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.notice_type AS ENUM (
+      'Safety Flash', 'Operational Instructions', 'Airside Notice',
+      'Ground Handling Procedures', 'Security Directive', 'Flight Operations Update',
+      'Emergency Notification', 'Service Bulletin', 'Airline Memo', 'Regulatory Update'
+    );
+  END IF;
+END $$;
 
-DROP TYPE IF EXISTS public.notice_category CASCADE;
-CREATE TYPE public.notice_category AS ENUM ('Safety Flash', 'Operational Memo', 'Urgent Notice', 'General Information');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_category' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.notice_category AS ENUM ('Safety Flash', 'Operational Memo', 'Urgent Notice', 'General Information');
+  END IF;
+END $$;
 
-DROP TYPE IF EXISTS public.notification_type CASCADE;
-CREATE TYPE public.notification_type AS ENUM ('critical', 'warning', 'info', 'success');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.notification_type AS ENUM ('critical', 'warning', 'info', 'success');
+  END IF;
+END $$;
 
 -- 2. CORE TABLES
 

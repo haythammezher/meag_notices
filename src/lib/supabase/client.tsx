@@ -30,6 +30,7 @@ const fromCookies = () =>
         .filter((c) => c.name);
 
 const fromStorage = () => {
+  if (typeof window === 'undefined') return [];
   try {
     return Object.keys(localStorage)
       .filter((k) => k.startsWith(PFX))
@@ -40,6 +41,7 @@ const fromStorage = () => {
 };
 
 const setCookie = (name: string, value: string, options?: any) => {
+  if (typeof document === 'undefined') return;
   let s = `${name}=${encodeURIComponent(value)}; Path=${options?.path || '/'}; SameSite=None; Secure; Partitioned`;
   if (options?.maxAge) s += `; Max-Age=${options.maxAge}`;
   if (options?.domain) s += `; Domain=${options.domain}`;
@@ -80,7 +82,11 @@ if (typeof window !== 'undefined' && !(window as any).__sb_patched__) {
         : input instanceof URL
         ? input.href
         : (input as Request).url;
-    if (token && (url.startsWith('/') || url.startsWith(window.location.origin))) {
+    if (
+      token &&
+      typeof window !== 'undefined' &&
+      (url.startsWith('/') || url.startsWith(window.location.origin))
+    ) {
       init = { ...(init || {}), headers: { ...(init?.headers || {}), 'x-sb-token': token } };
     }
     return orig(input, init);
