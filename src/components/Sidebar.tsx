@@ -35,6 +35,7 @@ const navItems: NavItem[] = [
   { id: 'nav-directory', label: 'Airline Directory', href: '/notice-management', icon: 'BuildingOfficeIcon', group: 'Administration' },
   { id: 'nav-documents', label: 'Documentation Library', href: '/documentation-library', icon: 'FolderOpenIcon', group: 'Administration' },
   { id: 'nav-doc-control', label: 'Documentation Control', href: '/documentation-control', icon: 'DocumentCheckIcon', group: 'Administration', adminOnly: true },
+  { id: 'nav-aviation-docs', label: 'Aviation Documents', href: '/aviation-documents', icon: 'ClipboardDocumentListIcon', group: 'Administration' },
   { id: 'nav-audit-log', label: 'System Audit Log', href: '/system-audit-log', icon: 'ClipboardDocumentListIcon', group: 'System', adminOnly: true },
   { id: 'nav-escalation-config', label: 'Escalation Config', href: '/escalation-config', icon: 'AdjustmentsHorizontalIcon', group: 'System', adminOnly: true },
   { id: 'nav-settings', label: 'Settings', href: '/notice-management', icon: 'Cog6ToothIcon', group: 'System' },
