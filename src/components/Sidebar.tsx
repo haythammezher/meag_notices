@@ -179,7 +179,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span
-                  className="font-bold tracking-widest text-lg"
+                  className="font-bold tracking-widest text-lg text-sky-300"
                   style={{
                     color: 'var(--cockpit-amber)',
                     fontFamily: "'Orbitron', 'Share Tech Mono', monospace",
