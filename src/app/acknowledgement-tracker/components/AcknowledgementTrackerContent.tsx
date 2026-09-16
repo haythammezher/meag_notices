@@ -39,6 +39,26 @@ interface TimelineEvent {
   signatureRef: string | null;
 }
 
+interface AirlineNoticeRow {
+  airline: string;
+  iata: string;
+  noticeId: string;
+  noticeRef: string;
+  noticeTitle: string;
+  noticePriority: string;
+  total: number;
+  acknowledged: number;
+  opened: number;
+  pending: number;
+  overdue: number;
+  rate: number;
+  escalationStage: 0 | 1 | 2 | 3;
+  lastReceiptAt: string | null;
+  signaturesVerified: number;
+  signaturesRequired: number;
+  requiresSignature: boolean;
+}
+
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const AIRLINE_IATA: Record<string, string> = {
@@ -59,6 +79,14 @@ const RECIPIENT_NAMES: Record<string, string[]> = {
 };
 
 const ROLES = ['Captain', 'First Officer', 'Dispatcher', 'Ops Controller', 'Station Manager'];
+
+const ESCALATION_STAGE_LABELS: Record<number, string> = {
+  0: 'NOMINAL', 1: 'REMINDER SENT', 2: 'ESCALATED', 3: 'CRITICAL',
+};
+
+const ESCALATION_STAGE_COLORS: Record<number, string> = {
+  0: '#00D46A', 1: '#FFB800', 2: '#FF6B1A', 3: '#FF3B3B',
+};
 
 // Deterministic pseudo-random number generator seeded by a string
 function seededRandom(seed: string): () => number {
@@ -173,6 +201,47 @@ function buildTimeline(noticeRef: string, targetAirlines: string[], ackPct: numb
   return events.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 }
 
+function buildAirlineNoticeMatrix(activeNotices: typeof notices): AirlineNoticeRow[] {
+  const rows: AirlineNoticeRow[] = [];
+  activeNotices.forEach((notice) => {
+    notice.targetAirlines.forEach((airline, idx) => {
+      const names = RECIPIENT_NAMES[airline] ?? ['Staff'];
+      const total = names.length;
+      const rand = seededRandom(`${notice.id}-${airline}-matrix`);
+      const variance = (rand() - 0.5) * 20;
+      const rate = Math.max(0, Math.min(100, Math.round(notice.ackPercentage + variance)));
+      const acked = Math.round((rate / 100) * total);
+      const opened = Math.min(1, total - acked);
+      const overdue = rate < 40 ? Math.max(0, total - acked - opened - 1) : 0;
+      const pending = Math.max(0, total - acked - opened - overdue);
+      const escalationStage: 0 | 1 | 2 | 3 = rate === 0 ? 3 : rate < 40 ? 2 : rate < 75 ? 1 : 0;
+      const lastReceiptAt = acked > 0
+        ? `2026-09-09T${String((8 + idx) % 24).padStart(2, '0')}:${String((10 + idx * 9) % 60).padStart(2, '0')}:00Z`
+        : null;
+      rows.push({
+        airline,
+        iata: AIRLINE_IATA[airline] ?? airline.slice(0, 2).toUpperCase(),
+        noticeId: notice.id,
+        noticeRef: notice.refNumber,
+        noticeTitle: notice.title,
+        noticePriority: notice.priority,
+        total,
+        acknowledged: acked,
+        opened,
+        pending,
+        overdue,
+        rate,
+        escalationStage,
+        lastReceiptAt,
+        signaturesVerified: acked,
+        signaturesRequired: notice.requiresSignature ? total : 0,
+        requiresSignature: notice.requiresSignature,
+      });
+    });
+  });
+  return rows;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function heatColor(status: AirlineHeatCell['status']): { bg: string; border: string; text: string } {
@@ -226,6 +295,10 @@ function formatTs(iso: string): string {
   return d.toISOString().slice(11, 16) + 'Z · ' + d.toISOString().slice(0, 10);
 }
 
+function formatTsShort(iso: string): string {
+  return new Date(iso).toISOString().slice(11, 16) + 'Z';
+}
+
 function priorityColor(p: string): string {
   switch (p) {
     case 'Critical':      return '#FF3B3B';
@@ -250,6 +323,27 @@ function KpiCard({ label, value, sub, color, icon }: { label: string; value: str
       <span className="text-2xl font-bold tabular-nums" style={{ color, fontFamily: "'Orbitron', monospace" }}>{value}</span>
       {sub && <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{sub}</span>}
     </div>
+  );
+}
+
+function EscalationBadge({ stage }: { stage: 0 | 1 | 2 | 3 }) {
+  const color = ESCALATION_STAGE_COLORS[stage];
+  const label = ESCALATION_STAGE_LABELS[stage];
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-bold"
+      style={{
+        background: `${color}15`,
+        border: `1px solid ${color}40`,
+        color,
+        fontFamily: "'Share Tech Mono', monospace",
+        fontSize: '0.48rem',
+        letterSpacing: '0.06em',
+      }}
+    >
+      {stage > 0 && <span className="w-1 h-1 rounded-full animate-pulse" style={{ background: color, boxShadow: `0 0 4px ${color}` }} />}
+      {label}
+    </span>
   );
 }
 
@@ -280,13 +374,441 @@ function HeatCell({ cell, onClick, selected }: { cell: AirlineHeatCell; onClick:
   );
 }
 
+// ─── Airline Status Tab ───────────────────────────────────────────────────────
+
+type AirlineStatusFilter = 'all' | 'escalated' | 'non_responsive' | 'sig_pending';
+type AirlineStatusSort = 'escalation' | 'rate_asc' | 'rate_desc' | 'airline' | 'receipt';
+
+interface AirlineStatusTabProps {
+  activeNotices: typeof notices;
+  onSelectNotice: (id: string) => void;
+}
+
+function AirlineStatusTab({ activeNotices, onSelectNotice }: AirlineStatusTabProps) {
+  const [filter, setFilter] = useState<AirlineStatusFilter>('all');
+  const [sort, setSort] = useState<AirlineStatusSort>('escalation');
+  const [expandedAirline, setExpandedAirline] = useState<string | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  const matrix = useMemo(() => buildAirlineNoticeMatrix(activeNotices), [activeNotices]);
+
+  // Group by airline for the airline-centric view
+  const airlineGroups = useMemo(() => {
+    const groups: Record<string, AirlineNoticeRow[]> = {};
+    matrix.forEach((row) => {
+      if (!groups[row.airline]) groups[row.airline] = [];
+      groups[row.airline].push(row);
+    });
+    return groups;
+  }, [matrix]);
+
+  const airlineSummaries = useMemo(() => {
+    return Object.entries(airlineGroups).map(([airline, rows]) => {
+      const totalNotices = rows.length;
+      const totalRecipients = rows.reduce((s, r) => s + r.total, 0);
+      const totalAcked = rows.reduce((s, r) => s + r.acknowledged, 0);
+      const totalOverdue = rows.reduce((s, r) => s + r.overdue, 0);
+      const totalSigRequired = rows.reduce((s, r) => s + r.signaturesRequired, 0);
+      const totalSigVerified = rows.reduce((s, r) => s + r.signaturesVerified, 0);
+      const maxEscalation = Math.max(...rows.map((r) => r.escalationStage)) as 0 | 1 | 2 | 3;
+      const overallRate = totalRecipients > 0 ? Math.round((totalAcked / totalRecipients) * 100) : 0;
+      const lastReceipt = rows
+        .map((r) => r.lastReceiptAt)
+        .filter(Boolean)
+        .sort()
+        .pop() ?? null;
+      const escalatedNotices = rows.filter((r) => r.escalationStage >= 2).length;
+      const iata = rows[0]?.iata ?? airline.slice(0, 2).toUpperCase();
+      return {
+        airline, iata, totalNotices, totalRecipients, totalAcked, totalOverdue,
+        totalSigRequired, totalSigVerified, maxEscalation, overallRate, lastReceipt,
+        escalatedNotices, rows,
+      };
+    });
+  }, [airlineGroups]);
+
+  const filteredSummaries = useMemo(() => {
+    let result = [...airlineSummaries];
+    if (filter === 'escalated') result = result.filter((a) => a.maxEscalation >= 2);
+    else if (filter === 'non_responsive') result = result.filter((a) => a.overallRate === 0);
+    else if (filter === 'sig_pending') result = result.filter((a) => a.totalSigRequired > a.totalSigVerified);
+
+    result.sort((a, b) => {
+      if (sort === 'escalation') return b.maxEscalation - a.maxEscalation;
+      if (sort === 'rate_asc') return a.overallRate - b.overallRate;
+      if (sort === 'rate_desc') return b.overallRate - a.overallRate;
+      if (sort === 'airline') return a.airline.localeCompare(b.airline);
+      if (sort === 'receipt') {
+        if (!a.lastReceipt && !b.lastReceipt) return 0;
+        if (!a.lastReceipt) return 1;
+        if (!b.lastReceipt) return -1;
+        return new Date(b.lastReceipt).getTime() - new Date(a.lastReceipt).getTime();
+      }
+      return 0;
+    });
+    return result;
+  }, [airlineSummaries, filter, sort]);
+
+  const globalKpi = useMemo(() => {
+    const totalEscalated = airlineSummaries.filter((a) => a.maxEscalation >= 2).length;
+    const totalCritical = airlineSummaries.filter((a) => a.maxEscalation === 3).length;
+    const totalSigPending = airlineSummaries.filter((a) => a.totalSigRequired > a.totalSigVerified).length;
+    const totalNonResponsive = airlineSummaries.filter((a) => a.overallRate === 0).length;
+    return { totalEscalated, totalCritical, totalSigPending, totalNonResponsive };
+  }, [airlineSummaries]);
+
+  const filterOptions: { key: AirlineStatusFilter; label: string; color: string; count: number }[] = [
+    { key: 'all', label: 'All Airlines', color: 'var(--muted-foreground)', count: airlineSummaries.length },
+    { key: 'escalated', label: 'Escalated', color: '#FF6B1A', count: globalKpi.totalEscalated },
+    { key: 'non_responsive', label: 'Non-Responsive', color: '#FF3B3B', count: globalKpi.totalNonResponsive },
+    { key: 'sig_pending', label: 'Sig Pending', color: '#1E90FF', count: globalKpi.totalSigPending },
+  ];
+
+  const sortOptions: { key: AirlineStatusSort; label: string }[] = [
+    { key: 'escalation', label: 'Escalation Level' },
+    { key: 'rate_asc', label: 'Rate ↑' },
+    { key: 'rate_desc', label: 'Rate ↓' },
+    { key: 'airline', label: 'Airline A–Z' },
+    { key: 'receipt', label: 'Latest Receipt' },
+  ];
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Global alert strip for critical airlines */}
+      {globalKpi.totalCritical > 0 && (
+        <div
+          className="flex items-center gap-3 px-4 py-2.5 rounded"
+          style={{ background: 'rgba(255,59,59,0.08)', border: '1px solid rgba(255,59,59,0.3)', boxShadow: '0 0 16px rgba(255,59,59,0.06)' }}
+        >
+          <div className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ background: '#FF3B3B', boxShadow: '0 0 8px #FF3B3B' }} />
+          <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: '0.6rem', color: '#FF3B3B', letterSpacing: '0.06em' }}>
+            CRITICAL ESCALATION — {globalKpi.totalCritical} airline{globalKpi.totalCritical > 1 ? 's' : ''} at Stage 3 · Immediate action required
+          </span>
+        </div>
+      )}
+
+      {/* Summary KPI row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="rounded p-3 flex flex-col gap-0.5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <span className="text-2xs uppercase tracking-widest" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.45rem' }}>Escalated Airlines</span>
+          <span className="text-xl font-bold tabular-nums" style={{ color: '#FF6B1A', fontFamily: "'Orbitron', monospace" }}>{globalKpi.totalEscalated}</span>
+          <span className="text-2xs" style={{ color: 'var(--muted-foreground)', fontSize: '0.5rem' }}>stage ≥ 2 across all notices</span>
+        </div>
+        <div className="rounded p-3 flex flex-col gap-0.5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <span className="text-2xs uppercase tracking-widest" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.45rem' }}>Critical</span>
+          <span className="text-xl font-bold tabular-nums" style={{ color: '#FF3B3B', fontFamily: "'Orbitron', monospace" }}>{globalKpi.totalCritical}</span>
+          <span className="text-2xs" style={{ color: 'var(--muted-foreground)', fontSize: '0.5rem' }}>stage 3 · LCAA notified</span>
+        </div>
+        <div className="rounded p-3 flex flex-col gap-0.5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <span className="text-2xs uppercase tracking-widest" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.45rem' }}>Sig Pending</span>
+          <span className="text-xl font-bold tabular-nums" style={{ color: '#1E90FF', fontFamily: "'Orbitron', monospace" }}>{globalKpi.totalSigPending}</span>
+          <span className="text-2xs" style={{ color: 'var(--muted-foreground)', fontSize: '0.5rem' }}>airlines with unverified sigs</span>
+        </div>
+        <div className="rounded p-3 flex flex-col gap-0.5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <span className="text-2xs uppercase tracking-widest" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.45rem' }}>Non-Responsive</span>
+          <span className="text-xl font-bold tabular-nums" style={{ color: '#FF3B3B', fontFamily: "'Orbitron', monospace" }}>{globalKpi.totalNonResponsive}</span>
+          <span className="text-2xs" style={{ color: 'var(--muted-foreground)', fontSize: '0.5rem' }}>0% ack rate airlines</span>
+        </div>
+      </div>
+
+      {/* Filters + Sort */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {filterOptions.map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setFilter(opt.key)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded text-2xs font-medium transition-all"
+              style={{
+                background: filter === opt.key ? `${opt.color}15` : 'var(--card)',
+                border: `1px solid ${filter === opt.key ? opt.color : 'var(--border)'}`,
+                color: filter === opt.key ? opt.color : 'var(--muted-foreground)',
+                fontFamily: "'Share Tech Mono', monospace",
+                fontSize: '0.5rem',
+              }}
+            >
+              {opt.label}
+              <span
+                className="px-1 py-0.5 rounded"
+                style={{ background: filter === opt.key ? `${opt.color}20` : 'rgba(255,255,255,0.05)', color: filter === opt.key ? opt.color : 'var(--muted-foreground)', fontSize: '0.42rem' }}
+              >
+                {opt.count}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-2xs" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem' }}>SORT:</span>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as AirlineStatusSort)}
+            className="px-2 py-1 rounded text-2xs outline-none"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.5rem' }}
+          >
+            {sortOptions.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Airline Cards */}
+      <div className="flex flex-col gap-3">
+        {filteredSummaries.map((summary) => {
+          const escColor = ESCALATION_STAGE_COLORS[summary.maxEscalation];
+          const isExpanded = expandedAirline === summary.airline;
+          const sigComplete = summary.totalSigRequired === 0 || summary.totalSigVerified >= summary.totalSigRequired;
+
+          return (
+            <div
+              key={summary.airline}
+              className="rounded-lg overflow-hidden"
+              style={{
+                background: 'var(--card)',
+                border: `1px solid ${summary.maxEscalation >= 2 ? `${escColor}35` : 'var(--border)'}`,
+                boxShadow: summary.maxEscalation >= 3 ? `0 0 16px ${escColor}12` : 'none',
+              }}
+            >
+              {/* Airline header row */}
+              <button
+                className="w-full text-left px-4 py-3 flex items-center gap-4 transition-all duration-150"
+                style={{ background: isExpanded ? `${escColor}05` : 'transparent' }}
+                onClick={() => setExpandedAirline(isExpanded ? null : summary.airline)}
+              >
+                {/* IATA badge */}
+                <div
+                  className="w-10 h-10 rounded flex items-center justify-center font-bold flex-shrink-0"
+                  style={{ background: `${escColor}15`, border: `1px solid ${escColor}30`, color: escColor, fontFamily: "'Share Tech Mono', monospace", fontSize: '0.65rem' }}
+                >
+                  {summary.iata}
+                </div>
+
+                {/* Airline name + escalation */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    <span className="text-sm font-bold" style={{ color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif" }}>{summary.airline}</span>
+                    <EscalationBadge stage={summary.maxEscalation} />
+                    {summary.escalatedNotices > 0 && (
+                      <span className="text-2xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,107,26,0.1)', color: '#FF6B1A', border: '1px solid rgba(255,107,26,0.25)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.42rem' }}>
+                        {summary.escalatedNotices} notice{summary.escalatedNotices > 1 ? 's' : ''} escalated
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-2xs" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem' }}>
+                      {summary.totalNotices} notice{summary.totalNotices > 1 ? 's' : ''} · {summary.totalAcked}/{summary.totalRecipients} recipients
+                    </span>
+                    {summary.lastReceipt && (
+                      <span className="flex items-center gap-1 text-2xs" style={{ color: '#00D46A', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem' }}>
+                        <Icon name="ClockIcon" size={9} style={{ color: '#00D46A' } as React.CSSProperties} />
+                        Last receipt: {formatTsShort(summary.lastReceipt)}
+                      </span>
+                    )}
+                    {!summary.lastReceipt && (
+                      <span className="text-2xs" style={{ color: '#FF3B3B', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem' }}>No receipts</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Rate + sig status */}
+                <div className="flex items-center gap-4 flex-shrink-0">
+                  {/* Signature verification */}
+                  {summary.totalSigRequired > 0 && (
+                    <div className="text-center hidden sm:block">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <Icon name="FingerPrintIcon" size={10} style={{ color: sigComplete ? '#00D46A' : '#1E90FF' } as React.CSSProperties} />
+                        <span className="text-xs font-bold tabular-nums" style={{ color: sigComplete ? '#00D46A' : '#1E90FF', fontFamily: "'Orbitron', monospace", fontSize: '0.6rem' }}>
+                          {summary.totalSigVerified}/{summary.totalSigRequired}
+                        </span>
+                      </div>
+                      <span className="text-2xs" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.42rem' }}>SIGS</span>
+                    </div>
+                  )}
+
+                  {/* Overall rate */}
+                  <div className="text-right">
+                    <p className="text-xl font-bold tabular-nums" style={{ color: summary.overallRate === 100 ? '#00D46A' : summary.overallRate >= 75 ? '#FFB800' : '#FF3B3B', fontFamily: "'Orbitron', monospace" }}>
+                      {summary.overallRate}%
+                    </p>
+                    <p className="text-2xs" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.42rem' }}>ACK RATE</p>
+                  </div>
+
+                  {/* Expand chevron */}
+                  <Icon
+                    name={isExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'}
+                    size={14}
+                    style={{ color: 'var(--muted-foreground)', flexShrink: 0 } as React.CSSProperties}
+                  />
+                </div>
+              </button>
+
+              {/* Progress bar */}
+              <div className="px-4 pb-2">
+                <div className="h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  <div
+                    className="h-1 rounded-full transition-all"
+                    style={{ width: `${summary.overallRate}%`, background: summary.overallRate === 100 ? '#00D46A' : summary.overallRate >= 75 ? '#FFB800' : '#FF3B3B' }}
+                  />
+                </div>
+              </div>
+
+              {/* Expanded: per-notice breakdown */}
+              {isExpanded && (
+                <div className="px-4 pb-4" style={{ borderTop: '1px solid var(--border)' }}>
+                  <p className="text-2xs uppercase tracking-widest mt-3 mb-2" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace" }}>
+                    Per-Notice Breakdown — {summary.airline}
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {summary.rows.map((row) => {
+                      const pc = priorityColor(row.noticePriority);
+                      const ec = ESCALATION_STAGE_COLORS[row.escalationStage];
+                      const rowKey = `${row.airline}-${row.noticeId}`;
+                      const isRowExpanded = expandedRow === rowKey;
+
+                      return (
+                        <div
+                          key={rowKey}
+                          className="rounded overflow-hidden"
+                          style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${row.escalationStage >= 2 ? `${ec}25` : 'rgba(255,255,255,0.06)'}` }}
+                        >
+                          <button
+                            className="w-full text-left px-3 py-2.5 flex items-center gap-3 transition-all"
+                            onClick={() => setExpandedRow(isRowExpanded ? null : rowKey)}
+                          >
+                            {/* Priority + ref */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                <span className="text-2xs font-bold px-1.5 py-0.5 rounded" style={{ background: `${pc}15`, color: pc, border: `1px solid ${pc}25`, fontFamily: "'Share Tech Mono', monospace", fontSize: '0.42rem' }}>
+                                  {row.noticePriority.toUpperCase()}
+                                </span>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onSelectNotice(row.noticeId); }}
+                                  className="text-2xs font-bold hover:underline"
+                                  style={{ color: 'var(--cockpit-amber)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.52rem' }}
+                                >
+                                  {row.noticeRef}
+                                </button>
+                                <EscalationBadge stage={row.escalationStage} />
+                                {row.requiresSignature && (
+                                  <span className="flex items-center gap-0.5 text-2xs px-1 py-0.5 rounded" style={{ background: 'rgba(0,170,255,0.08)', color: 'var(--cockpit-blue)', border: '1px solid rgba(0,170,255,0.2)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.42rem' }}>
+                                    <Icon name="FingerPrintIcon" size={8} />SIG
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs truncate" style={{ color: 'var(--card-foreground)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.65rem' }}>
+                                {row.noticeTitle.length > 60 ? row.noticeTitle.slice(0, 60) + '…' : row.noticeTitle}
+                              </p>
+                            </div>
+
+                            {/* Stats */}
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                              {/* Receipt timestamp */}
+                              <div className="text-right hidden md:block">
+                                <p className="text-2xs" style={{ color: row.lastReceiptAt ? '#00D46A' : 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem' }}>
+                                  {row.lastReceiptAt ? formatTsShort(row.lastReceiptAt) : '—'}
+                                </p>
+                                <p className="text-2xs" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.4rem' }}>LAST RECEIPT</p>
+                              </div>
+
+                              {/* Sig verification */}
+                              {row.requiresSignature && (
+                                <div className="text-right hidden sm:block">
+                                  <p className="text-2xs font-bold" style={{ color: row.signaturesVerified >= row.signaturesRequired ? '#00D46A' : '#1E90FF', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.5rem' }}>
+                                    {row.signaturesVerified}/{row.signaturesRequired}
+                                  </p>
+                                  <p className="text-2xs" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.4rem' }}>SIGS</p>
+                                </div>
+                              )}
+
+                              {/* Rate */}
+                              <div className="text-right" style={{ minWidth: '36px' }}>
+                                <p className="text-sm font-bold tabular-nums" style={{ color: row.rate === 100 ? '#00D46A' : row.rate >= 75 ? '#FFB800' : '#FF3B3B', fontFamily: "'Orbitron', monospace" }}>
+                                  {row.rate}%
+                                </p>
+                              </div>
+
+                              <Icon name={isRowExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'} size={12} style={{ color: 'var(--muted-foreground)' } as React.CSSProperties} />
+                            </div>
+                          </button>
+
+                          {/* Expanded row: recipient-level detail */}
+                          {isRowExpanded && (
+                            <div className="px-3 pb-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 mb-3">
+                                {[
+                                  { label: 'ACK', value: row.acknowledged, color: '#00D46A' },
+                                  { label: 'OPENED', value: row.opened, color: '#1E90FF' },
+                                  { label: 'PENDING', value: row.pending, color: '#FFB800' },
+                                  { label: 'OVERDUE', value: row.overdue, color: '#FF3B3B' },
+                                ].map(({ label, value, color }) => (
+                                  <div key={label} className="rounded p-2 text-center" style={{ background: `${color}08`, border: `1px solid ${color}20` }}>
+                                    <p className="text-sm font-bold tabular-nums" style={{ color, fontFamily: "'Orbitron', monospace" }}>{value}</p>
+                                    <p className="text-2xs" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.42rem' }}>{label}</p>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Recipient list */}
+                              <div className="flex flex-col gap-1">
+                                {generateRecipients(row.airline, row.noticeId, row.rate).map((r) => {
+                                  const sc = statusColor(r.status);
+                                  return (
+                                    <div
+                                      key={r.id}
+                                      className="flex items-center gap-3 px-2.5 py-1.5 rounded"
+                                      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
+                                    >
+                                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: sc }} />
+                                      <div className="flex-1 min-w-0">
+                                        <span className="text-xs font-medium" style={{ color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif" }}>{r.name}</span>
+                                        <span className="text-2xs ml-2" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.45rem' }}>{r.role}</span>
+                                      </div>
+                                      <span className="text-2xs font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: `${sc}12`, color: sc, border: `1px solid ${sc}25`, fontFamily: "'Share Tech Mono', monospace", fontSize: '0.42rem' }}>
+                                        {statusLabel(r.status)}
+                                      </span>
+                                      {r.acknowledgedAt && (
+                                        <span className="text-2xs hidden sm:block flex-shrink-0" style={{ color: '#00D46A', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.45rem' }}>
+                                          {formatTsShort(r.acknowledgedAt)}
+                                        </span>
+                                      )}
+                                      {r.signatureRef && (
+                                        <span className="text-2xs hidden md:flex items-center gap-0.5 flex-shrink-0" style={{ color: 'var(--cockpit-blue)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.45rem' }}>
+                                          <Icon name="FingerPrintIcon" size={8} style={{ color: 'var(--cockpit-blue)' } as React.CSSProperties} />
+                                          {r.signatureRef}
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {filteredSummaries.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Icon name="BuildingOffice2Icon" size={32} style={{ color: 'var(--muted-foreground)', opacity: 0.4 } as React.CSSProperties} />
+            <p className="text-sm" style={{ color: 'var(--muted-foreground)', fontFamily: "'Rajdhani', sans-serif" }}>No airlines match the selected filter</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-type Tab = 'heatmap' | 'timeline' | 'signatures';
+type Tab = 'airline_status' | 'heatmap' | 'timeline' | 'signatures';
 
 export default function AcknowledgementTrackerContent() {
   const [selectedNoticeId, setSelectedNoticeId] = useState<string>(notices[0]?.id ?? '');
-  const [activeTab, setActiveTab] = useState<Tab>('heatmap');
+  const [activeTab, setActiveTab] = useState<Tab>('airline_status');
   const [selectedAirline, setSelectedAirline] = useState<string | null>(null);
   const [drillRecipient, setDrillRecipient] = useState<RecipientSignature | null>(null);
   const [sigFilter, setSigFilter] = useState<'all' | 'acknowledged' | 'opened' | 'pending' | 'overdue'>('all');
@@ -345,6 +867,7 @@ export default function AcknowledgementTrackerContent() {
   }, []);
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
+    { key: 'airline_status', label: 'Airline Status', icon: 'BuildingOffice2Icon' },
     { key: 'heatmap', label: 'Heatmap', icon: 'Squares2X2Icon' },
     { key: 'timeline', label: 'Timeline', icon: 'ClockIcon' },
     { key: 'signatures', label: 'Signatures', icon: 'FingerPrintIcon' },
@@ -383,7 +906,7 @@ export default function AcknowledgementTrackerContent() {
             </span>
           </div>
           <p className="text-xs ml-3" style={{ color: 'var(--muted-foreground)', fontFamily: "'Rajdhani', sans-serif" }}>
-            Real-time acknowledgement tracking · per-notice heatmaps · signature drill-down
+            Real-time per-airline acknowledgement · receipt timestamps · signature verification · escalation tracking
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -396,109 +919,115 @@ export default function AcknowledgementTrackerContent() {
 
       <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
 
-        {/* ── Notice Selector Panel ── */}
-        <div
-          className="hidden lg:flex flex-col flex-shrink-0 overflow-hidden"
-          style={{ width: '280px', borderRight: '1px solid var(--border)', background: 'var(--card)' }}
-        >
-          <div className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
-            <p className="text-2xs uppercase tracking-widest mb-2" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace" }}>Select Notice</p>
-            <div className="relative">
-              <Icon name="MagnifyingGlassIcon" size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--muted-foreground)' } as React.CSSProperties} />
-              <input
-                type="text"
-                placeholder="Search ref or title…"
-                value={noticeSearch}
-                onChange={(e) => setNoticeSearch(e.target.value)}
-                className="w-full pl-7 pr-2 py-1.5 text-xs rounded outline-none"
-                style={{ background: 'var(--input)', border: '1px solid var(--border)', color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif" }}
-              />
+        {/* ── Notice Selector Panel (hidden on airline_status tab) ── */}
+        {activeTab !== 'airline_status' && (
+          <div
+            className="hidden lg:flex flex-col flex-shrink-0 overflow-hidden"
+            style={{ width: '280px', borderRight: '1px solid var(--border)', background: 'var(--card)' }}
+          >
+            <div className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
+              <p className="text-2xs uppercase tracking-widest mb-2" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace" }}>Select Notice</p>
+              <div className="relative">
+                <Icon name="MagnifyingGlassIcon" size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--muted-foreground)' } as React.CSSProperties} />
+                <input
+                  type="text"
+                  placeholder="Search ref or title…"
+                  value={noticeSearch}
+                  onChange={(e) => setNoticeSearch(e.target.value)}
+                  className="w-full pl-7 pr-2 py-1.5 text-xs rounded outline-none"
+                  style={{ background: 'var(--input)', border: '1px solid var(--border)', color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif" }}
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto scrollbar-thin py-1">
+              {filteredNotices.map((n) => {
+                const active = n.id === selectedNoticeId;
+                const pc = priorityColor(n.priority);
+                return (
+                  <button
+                    key={n.id}
+                    onClick={() => { setSelectedNoticeId(n.id); setSelectedAirline(null); }}
+                    className="w-full text-left px-3 py-2.5 transition-all duration-100"
+                    style={{
+                      background: active ? 'rgba(255,184,0,0.06)' : 'transparent',
+                      borderLeft: `2px solid ${active ? 'var(--cockpit-amber)' : 'transparent'}`,
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span
+                        className="text-2xs font-bold px-1.5 py-0.5 rounded"
+                        style={{ background: `${pc}15`, color: pc, fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem', border: `1px solid ${pc}30` }}
+                      >
+                        {n.priority.toUpperCase()}
+                      </span>
+                      <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: '0.55rem', color: active ? 'var(--cockpit-amber)' : 'var(--muted-foreground)' }}>
+                        {n.refNumber}
+                      </span>
+                    </div>
+                    <p className="text-xs leading-tight mb-1" style={{ color: active ? 'var(--foreground)' : 'var(--card-foreground)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}>
+                      {n.title.length > 60 ? n.title.slice(0, 60) + '…' : n.title}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        <div className="h-1 rounded-full" style={{ width: `${n.ackPercentage}%`, background: n.ackPercentage === 100 ? '#00D46A' : n.ackPercentage >= 75 ? '#FFB800' : '#FF3B3B' }} />
+                      </div>
+                      <span className="text-2xs tabular-nums font-bold" style={{ color: n.ackPercentage === 100 ? '#00D46A' : n.ackPercentage >= 75 ? '#FFB800' : '#FF3B3B', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.5rem' }}>
+                        {n.ackPercentage}%
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto scrollbar-thin py-1">
-            {filteredNotices.map((n) => {
-              const active = n.id === selectedNoticeId;
-              const pc = priorityColor(n.priority);
-              return (
-                <button
-                  key={n.id}
-                  onClick={() => { setSelectedNoticeId(n.id); setSelectedAirline(null); }}
-                  className="w-full text-left px-3 py-2.5 transition-all duration-100"
-                  style={{
-                    background: active ? 'rgba(255,184,0,0.06)' : 'transparent',
-                    borderLeft: `2px solid ${active ? 'var(--cockpit-amber)' : 'transparent'}`,
-                  }}
-                >
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span
-                      className="text-2xs font-bold px-1.5 py-0.5 rounded"
-                      style={{ background: `${pc}15`, color: pc, fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem', border: `1px solid ${pc}30` }}
-                    >
-                      {n.priority.toUpperCase()}
-                    </span>
-                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: '0.55rem', color: active ? 'var(--cockpit-amber)' : 'var(--muted-foreground)' }}>
-                      {n.refNumber}
-                    </span>
-                  </div>
-                  <p className="text-xs leading-tight mb-1" style={{ color: active ? 'var(--foreground)' : 'var(--card-foreground)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}>
-                    {n.title.length > 60 ? n.title.slice(0, 60) + '…' : n.title}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                      <div className="h-1 rounded-full" style={{ width: `${n.ackPercentage}%`, background: n.ackPercentage === 100 ? '#00D46A' : n.ackPercentage >= 75 ? '#FFB800' : '#FF3B3B' }} />
-                    </div>
-                    <span className="text-2xs tabular-nums font-bold" style={{ color: n.ackPercentage === 100 ? '#00D46A' : n.ackPercentage >= 75 ? '#FFB800' : '#FF3B3B', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.5rem' }}>
-                      {n.ackPercentage}%
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        )}
 
         {/* ── Main Content ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
 
-          {/* Notice Header */}
-          <div className="px-6 py-3" style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,184,0,0.02)' }}>
-            <div className="flex flex-wrap items-start gap-3 justify-between">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                  <span
-                    className="text-2xs font-bold px-2 py-0.5 rounded"
-                    style={{ background: `${priorityColor(selectedNotice.priority)}15`, color: priorityColor(selectedNotice.priority), fontFamily: "'Share Tech Mono', monospace", fontSize: '0.5rem', border: `1px solid ${priorityColor(selectedNotice.priority)}30` }}
-                  >
-                    {selectedNotice.priority.toUpperCase()}
-                  </span>
-                  <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: '0.65rem', color: 'var(--cockpit-amber)' }}>{selectedNotice.refNumber}</span>
-                  <span className="text-2xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--muted-foreground)', border: '1px solid var(--border)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem' }}>
-                    {selectedNotice.type.toUpperCase()}
-                  </span>
-                  {selectedNotice.requiresSignature && (
-                    <span className="text-2xs px-1.5 py-0.5 rounded flex items-center gap-1" style={{ background: 'rgba(0,170,255,0.08)', color: 'var(--cockpit-blue)', border: '1px solid rgba(0,170,255,0.2)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem' }}>
-                      <Icon name="FingerPrintIcon" size={9} />SIG REQ
+          {/* Notice Header (hidden on airline_status tab) */}
+          {activeTab !== 'airline_status' && (
+            <div className="px-6 py-3" style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,184,0,0.02)' }}>
+              <div className="flex flex-wrap items-start gap-3 justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span
+                      className="text-2xs font-bold px-2 py-0.5 rounded"
+                      style={{ background: `${priorityColor(selectedNotice.priority)}15`, color: priorityColor(selectedNotice.priority), fontFamily: "'Share Tech Mono', monospace", fontSize: '0.5rem', border: `1px solid ${priorityColor(selectedNotice.priority)}30` }}
+                    >
+                      {selectedNotice.priority.toUpperCase()}
                     </span>
-                  )}
+                    <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: '0.65rem', color: 'var(--cockpit-amber)' }}>{selectedNotice.refNumber}</span>
+                    <span className="text-2xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--muted-foreground)', border: '1px solid var(--border)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem' }}>
+                      {selectedNotice.type.toUpperCase()}
+                    </span>
+                    {selectedNotice.requiresSignature && (
+                      <span className="text-2xs px-1.5 py-0.5 rounded flex items-center gap-1" style={{ background: 'rgba(0,170,255,0.08)', color: 'var(--cockpit-blue)', border: '1px solid rgba(0,170,255,0.2)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.48rem' }}>
+                        <Icon name="FingerPrintIcon" size={9} />SIG REQ
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif" }}>{selectedNotice.title}</p>
                 </div>
-                <p className="text-sm font-semibold" style={{ color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif" }}>{selectedNotice.title}</p>
-              </div>
-              <div className="flex items-center gap-4 flex-shrink-0">
-                <div className="text-right">
-                  <p className="text-2xs" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.5rem' }}>OVERALL ACK</p>
-                  <p className="text-xl font-bold tabular-nums" style={{ color: kpi.rate === 100 ? '#00D46A' : kpi.rate >= 75 ? '#FFB800' : '#FF3B3B', fontFamily: "'Orbitron', monospace" }}>{kpi.rate}%</p>
+                <div className="flex items-center gap-4 flex-shrink-0">
+                  <div className="text-right">
+                    <p className="text-2xs" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.5rem' }}>OVERALL ACK</p>
+                    <p className="text-xl font-bold tabular-nums" style={{ color: kpi.rate === 100 ? '#00D46A' : kpi.rate >= 75 ? '#FFB800' : '#FF3B3B', fontFamily: "'Orbitron', monospace" }}>{kpi.rate}%</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* KPI Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
-            <KpiCard label="Recipients" value={kpi.total} sub="targeted" color="#1E90FF" icon="UsersIcon" />
-            <KpiCard label="Acknowledged" value={kpi.acked} sub={`${kpi.rate}% rate`} color="#00D46A" icon="CheckCircleIcon" />
-            <KpiCard label="Full Compliance" value={kpi.fullAirlines} sub="airlines 100%" color="#00D46A" icon="BuildingOffice2Icon" />
-            <KpiCard label="Non-Responsive" value={kpi.noneAirlines} sub="airlines 0%" color="#FF3B3B" icon="ExclamationTriangleIcon" />
-          </div>
+          {/* KPI Strip (hidden on airline_status tab) */}
+          {activeTab !== 'airline_status' && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+              <KpiCard label="Recipients" value={kpi.total} sub="targeted" color="#1E90FF" icon="UsersIcon" />
+              <KpiCard label="Acknowledged" value={kpi.acked} sub={`${kpi.rate}% rate`} color="#00D46A" icon="CheckCircleIcon" />
+              <KpiCard label="Full Compliance" value={kpi.fullAirlines} sub="airlines 100%" color="#00D46A" icon="BuildingOffice2Icon" />
+              <KpiCard label="Non-Responsive" value={kpi.noneAirlines} sub="airlines 0%" color="#FF3B3B" icon="ExclamationTriangleIcon" />
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="flex items-center gap-0 px-6" style={{ borderBottom: '1px solid var(--border)' }}>
@@ -520,7 +1049,7 @@ export default function AcknowledgementTrackerContent() {
                 {t.label}
               </button>
             ))}
-            {selectedAirline && (
+            {selectedAirline && activeTab !== 'airline_status' && (
               <div className="ml-auto flex items-center gap-2 py-2">
                 <span className="text-2xs px-2 py-1 rounded flex items-center gap-1" style={{ background: 'rgba(255,184,0,0.08)', color: 'var(--cockpit-amber)', border: '1px solid rgba(255,184,0,0.2)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.5rem' }}>
                   <Icon name="FunnelIcon" size={9} />
@@ -535,6 +1064,14 @@ export default function AcknowledgementTrackerContent() {
 
           {/* Tab Content */}
           <div className="flex-1 overflow-y-auto scrollbar-thin px-6 py-4">
+
+            {/* ── AIRLINE STATUS TAB ── */}
+            {activeTab === 'airline_status' && (
+              <AirlineStatusTab
+                activeNotices={activeNotices}
+                onSelectNotice={(id) => { setSelectedNoticeId(id); setActiveTab('heatmap'); }}
+              />
+            )}
 
             {/* ── HEATMAP TAB ── */}
             {activeTab === 'heatmap' && (
