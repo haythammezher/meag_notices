@@ -60,6 +60,20 @@ const RECIPIENT_NAMES: Record<string, string[]> = {
 
 const ROLES = ['Captain', 'First Officer', 'Dispatcher', 'Ops Controller', 'Station Manager'];
 
+// Deterministic pseudo-random number generator seeded by a string
+function seededRandom(seed: string): () => number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0;
+  }
+  return function () {
+    h = (Math.imul(h ^ (h >>> 16), 0x45d9f3b)) | 0;
+    h = (Math.imul(h ^ (h >>> 16), 0x45d9f3b)) | 0;
+    h ^= h >>> 16;
+    return ((h >>> 0) / 0xffffffff);
+  };
+}
+
 function generateRecipients(airline: string, noticeId: string, ackRate: number): RecipientSignature[] {
   const names = RECIPIENT_NAMES[airline] ?? ['Ops. Staff 1', 'Ops. Staff 2'];
   const total = names.length;
@@ -67,6 +81,7 @@ function generateRecipients(airline: string, noticeId: string, ackRate: number):
   const opened = Math.min(Math.round(total * 0.1), total - acked);
 
   return names.map((name, i) => {
+    const rand = seededRandom(`${noticeId}-${airline}-${i}`);
     let status: RecipientSignature['status'];
     if (i < acked) status = 'acknowledged';
     else if (i < acked + opened) status = 'opened';
@@ -78,6 +93,10 @@ function generateRecipients(airline: string, noticeId: string, ackRate: number):
       ? `2026-09-09T${String(baseHour).padStart(2, '0')}:${String(10 + i * 7).padStart(2, '0')}:00Z`
       : null;
 
+    const r1 = Math.floor(rand() * 255);
+    const r2 = Math.floor(rand() * 255);
+    const r3 = Math.floor(rand() * 255);
+
     return {
       id: `${noticeId}-${airline.replace(/\s/g, '')}-${i}`,
       name,
@@ -87,7 +106,7 @@ function generateRecipients(airline: string, noticeId: string, ackRate: number):
       status,
       acknowledgedAt: ackTime,
       signatureRef: status === 'acknowledged' ? `SIG-${noticeId.slice(-3)}-${airline.slice(0, 2).toUpperCase()}${String(i + 1).padStart(2, '0')}` : null,
-      ipAddress: status === 'acknowledged' ? `10.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}` : null,
+      ipAddress: status === 'acknowledged' ? `10.${r1}.${r2}.${r3}` : null,
       deviceType: status === 'acknowledged' ? (['desktop', 'mobile', 'tablet'] as const)[i % 3] : null,
       readDurationSec: status === 'acknowledged' ? 45 + i * 18 : status === 'opened' ? 12 + i * 5 : null,
     };
@@ -101,7 +120,8 @@ function buildHeatmap(noticeId: string, targetAirlines: string[], ackPct: number
     }
     const names = RECIPIENT_NAMES[airline] ?? ['Staff 1'];
     const total = names.length;
-    const variance = (Math.random() - 0.5) * 20;
+    const rand = seededRandom(`${noticeId}-${airline}-heatmap`);
+    const variance = (rand() - 0.5) * 20;
     const rate = Math.max(0, Math.min(100, Math.round(ackPct + variance)));
     const acked = Math.round((rate / 100) * total);
     const opened = Math.min(1, total - acked);
