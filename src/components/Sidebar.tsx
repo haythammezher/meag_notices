@@ -189,6 +189,17 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                 >
                   MEAG
                 </span>
+                <span
+                  className="font-bold tracking-widest text-lg"
+                  style={{
+                    color: '#0a1f44',
+                    fontFamily: "'Orbitron', 'Share Tech Mono', monospace",
+                    letterSpacing: '0.12em',
+                    textShadow: '0 0 8px rgba(10,31,68,0.4)',
+                  }}
+                >
+                  AeroSign
+                </span>
               </div>
               <p
                 className="text-2xs truncate"
