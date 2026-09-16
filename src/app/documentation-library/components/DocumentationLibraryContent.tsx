@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useMemo } from 'react';
 import Icon from '@/components/ui/AppIcon';
+import AirlineLogo from '@/components/ui/AirlineLogo';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,16 +69,16 @@ const documents: Document[] = [
     expiryDate: '2027-01-14',
     fileSize: '8.4 MB',
     fileType: 'PDF',
-    uploadedBy: 'Karim Abdallah',
+    uploadedBy: 'Haytham Mezher',
     lastModified: '2026-01-15',
     description: 'Comprehensive ground handling procedures for wide-body aircraft including A330, B777, and B787 operations at MEAG stations.',
     applicableAircraft: 'A330, B777, B787',
     airlineAccess: allAirlines.map((a) => ({ ...a })),
     versions: [
-      { version: 'v4.2', uploadedBy: 'Karim Abdallah', uploadedAt: '2026-01-15 10:00', fileSize: '8.4 MB', changeNote: 'Updated pushback procedures for B787. Added new de-icing section.', isCurrent: true },
+      { version: 'v4.2', uploadedBy: 'Haytham Mezher', uploadedAt: '2026-01-15 10:00', fileSize: '8.4 MB', changeNote: 'Updated pushback procedures for B787. Added new de-icing section.', isCurrent: true },
       { version: 'v4.1', uploadedBy: 'Sara Mansour', uploadedAt: '2025-09-01 14:30', fileSize: '8.1 MB', changeNote: 'Revised towing limits for A330neo variant.', isCurrent: false },
       { version: 'v4.0', uploadedBy: 'Ahmed Nour', uploadedAt: '2025-03-10 09:15', fileSize: '7.9 MB', changeNote: 'Major revision — incorporated IATA AHM 2025 updates.', isCurrent: false },
-      { version: 'v3.5', uploadedBy: 'Karim Abdallah', uploadedAt: '2024-07-22 11:00', fileSize: '7.4 MB', changeNote: 'Added cargo door procedures for B777F.', isCurrent: false },
+      { version: 'v3.5', uploadedBy: 'Haytham Mezher', uploadedAt: '2024-07-22 11:00', fileSize: '7.4 MB', changeNote: 'Added cargo door procedures for B777F.', isCurrent: false },
     ],
   },
   {
@@ -117,7 +118,7 @@ const documents: Document[] = [
     airlineAccess: allAirlines.slice(0, 5).map((a) => ({ ...a })),
     versions: [
       { version: 'v1.8', uploadedBy: 'Ahmed Nour', uploadedAt: '2026-08-20 15:45', fileSize: '5.7 MB', changeNote: 'Under review — pending approval for new bridge type at Terminal 2.', isCurrent: true },
-      { version: 'v1.7', uploadedBy: 'Karim Abdallah', uploadedAt: '2026-02-10 10:30', fileSize: '5.5 MB', changeNote: 'Updated emergency procedures.', isCurrent: false },
+      { version: 'v1.7', uploadedBy: 'Haytham Mezher', uploadedAt: '2026-02-10 10:30', fileSize: '5.5 MB', changeNote: 'Updated emergency procedures.', isCurrent: false },
     ],
   },
   {
@@ -131,12 +132,12 @@ const documents: Document[] = [
     expiryDate: '2026-12-31',
     fileSize: '12.1 MB',
     fileType: 'PDF',
-    uploadedBy: 'Karim Abdallah',
+    uploadedBy: 'Haytham Mezher',
     lastModified: '2026-01-01',
     description: 'IATA DGR-compliant acceptance, storage, and loading procedures for dangerous goods across all cargo and passenger operations.',
     airlineAccess: allAirlines.map((a) => ({ ...a })),
     versions: [
-      { version: 'v3.0', uploadedBy: 'Karim Abdallah', uploadedAt: '2026-01-01 00:00', fileSize: '12.1 MB', changeNote: 'Annual update per IATA DGR 67th Edition.', isCurrent: true },
+      { version: 'v3.0', uploadedBy: 'Haytham Mezher', uploadedAt: '2026-01-01 00:00', fileSize: '12.1 MB', changeNote: 'Annual update per IATA DGR 67th Edition.', isCurrent: true },
       { version: 'v2.9', uploadedBy: 'Sara Mansour', uploadedAt: '2025-01-01 00:00', fileSize: '11.8 MB', changeNote: 'Annual update per IATA DGR 66th Edition.', isCurrent: false },
     ],
   },
@@ -176,7 +177,7 @@ const documents: Document[] = [
     airlineAccess: allAirlines.slice(0, 3).map((a) => ({ ...a })),
     versions: [
       { version: 'v1.2', uploadedBy: 'Sara Mansour', uploadedAt: '2026-04-01 11:00', fileSize: '2.8 MB', changeNote: 'Updated per ECAA circular 2026-04.', isCurrent: true },
-      { version: 'v1.1', uploadedBy: 'Karim Abdallah', uploadedAt: '2026-01-10 09:00', fileSize: '2.6 MB', changeNote: 'Added new audit checklist appendix.', isCurrent: false },
+      { version: 'v1.1', uploadedBy: 'Haytham Mezher', uploadedAt: '2026-01-10 09:00', fileSize: '2.6 MB', changeNote: 'Added new audit checklist appendix.', isCurrent: false },
     ],
   },
   {
@@ -391,7 +392,7 @@ export default function DocumentationLibraryContent() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       {doc.airlineAccess.filter((a) => a.accessGranted).slice(0, 4).map((a) => (
-                        <span key={a.iata} className="text-2xs font-bold w-6 h-6 rounded flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.15)', color: 'var(--primary)' }} title={a.name}>{a.iata}</span>
+                        <AirlineLogo key={a.iata} iata={a.iata} name={a.name} size={24} />
                       ))}
                       {doc.airlineAccess.filter((a) => a.accessGranted).length > 4 && (
                         <span className="text-2xs" style={{ color: 'var(--muted-foreground)' }}>+{doc.airlineAccess.filter((a) => a.accessGranted).length - 4}</span>
@@ -590,13 +591,22 @@ function AccessTab({ airlineAccess }: { airlineAccess: AirlineAccess[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(34,197,94,0.12)', color: '#22C55E' }}>
-          {granted.length} Airlines with Access
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(34,197,94,0.12)', color: '#22C55E' }}>
+            {granted.length} Airlines with Access
+          </div>
+          <div className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(107,114,128,0.12)', color: '#9CA3AF' }}>
+            {denied.length} Restricted
+          </div>
         </div>
-        <div className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(107,114,128,0.12)', color: '#9CA3AF' }}>
-          {denied.length} Restricted
-        </div>
+        <button
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold flex-shrink-0 shadow-md transition-all hover:opacity-90 active:scale-95"
+          style={{ background: 'var(--primary)', color: '#000', boxShadow: '0 2px 8px rgba(245,158,11,0.4)' }}
+        >
+          <Icon name="PlusIcon" size={16} />
+          Add Airline
+        </button>
       </div>
 
       <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
@@ -613,7 +623,7 @@ function AccessTab({ airlineAccess }: { airlineAccess: AirlineAccess[] }) {
               <tr key={airline.iata} style={{ borderBottom: idx < airlineAccess.length - 1 ? '1px solid var(--border)' : 'none', background: 'var(--card)' }}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="text-xs font-bold w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--primary)' }}>{airline.iata}</span>
+                    <AirlineLogo iata={airline.iata} name={airline.name} size={32} className="rounded-lg" />
                     <span className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{airline.name}</span>
                   </div>
                 </td>
@@ -740,7 +750,7 @@ function UploadDrawer({ onClose }: { onClose: () => void }) {
               {allAirlines.map((airline) => (
                 <label key={airline.iata} className="flex items-center gap-3 cursor-pointer py-1.5 px-3 rounded-lg hover:bg-muted transition-colors">
                   <input type="checkbox" defaultChecked={airline.accessGranted} className="rounded" style={{ accentColor: 'var(--primary)' }} />
-                  <span className="text-xs font-bold w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--primary)' }}>{airline.iata}</span>
+                  <AirlineLogo iata={airline.iata} name={airline.name} size={28} className="rounded" />
                   <span className="text-sm" style={{ color: 'var(--foreground)' }}>{airline.name}</span>
                 </label>
               ))}

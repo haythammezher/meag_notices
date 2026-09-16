@@ -3,27 +3,45 @@
 -- ============================================================
 
 -- 1. TYPES
-DROP TYPE IF EXISTS public.user_role CASCADE;
-CREATE TYPE public.user_role AS ENUM ('administrator', 'dept_head', 'publisher', 'airline_manager', 'viewer');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.user_role AS ENUM ('administrator', 'dept_head', 'publisher', 'airline_manager', 'viewer');
+  END IF;
+END $$;
 
-DROP TYPE IF EXISTS public.notice_priority CASCADE;
-CREATE TYPE public.notice_priority AS ENUM ('Critical', 'High', 'Medium', 'Informational');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_priority' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.notice_priority AS ENUM ('Critical', 'High', 'Medium', 'Informational');
+  END IF;
+END $$;
 
-DROP TYPE IF EXISTS public.notice_status CASCADE;
-CREATE TYPE public.notice_status AS ENUM ('Active', 'Draft', 'Pending Approval', 'Expired');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_status' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.notice_status AS ENUM ('Active', 'Draft', 'Pending Approval', 'Expired');
+  END IF;
+END $$;
 
-DROP TYPE IF EXISTS public.notice_type CASCADE;
-CREATE TYPE public.notice_type AS ENUM (
-  'Safety Flash', 'Operational Instructions', 'Airside Notice',
-  'Ground Handling Procedures', 'Security Directive', 'Flight Operations Update',
-  'Emergency Notification', 'Service Bulletin', 'Airline Memo', 'Regulatory Update'
-);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_type' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.notice_type AS ENUM (
+      'Safety Flash', 'Operational Instructions', 'Airside Notice',
+      'Ground Handling Procedures', 'Security Directive', 'Flight Operations Update',
+      'Emergency Notification', 'Service Bulletin', 'Airline Memo', 'Regulatory Update'
+    );
+  END IF;
+END $$;
 
-DROP TYPE IF EXISTS public.notice_category CASCADE;
-CREATE TYPE public.notice_category AS ENUM ('Safety Flash', 'Operational Memo', 'Urgent Notice', 'General Information');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_category' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.notice_category AS ENUM ('Safety Flash', 'Operational Memo', 'Urgent Notice', 'General Information');
+  END IF;
+END $$;
 
-DROP TYPE IF EXISTS public.notification_type CASCADE;
-CREATE TYPE public.notification_type AS ENUM ('critical', 'warning', 'info', 'success');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type' AND typnamespace = 'public'::regnamespace) THEN
+    CREATE TYPE public.notification_type AS ENUM ('critical', 'warning', 'info', 'success');
+  END IF;
+END $$;
 
 -- 2. CORE TABLES
 
@@ -253,7 +271,7 @@ BEGIN
   ) VALUES
     (admin_uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
      'admin@meag-aviation.com', crypt('MEAGAdmin#2026', gen_salt('bf', 10)), now(), now(), now(),
-     jsonb_build_object('full_name', 'Karim Abdallah', 'role', 'administrator'),
+     jsonb_build_object('full_name', 'Haytham Mezher', 'role', 'administrator'),
      jsonb_build_object('provider', 'email', 'providers', ARRAY['email']::TEXT[]),
      false, false, '', null, '', null, '', '', null, '', 0, '', null, null, '', '', null),
     (depthead_uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
@@ -287,7 +305,7 @@ BEGIN
   ) VALUES
     (notice_001, 'SF-2026-047', 'Airside Vehicle Incident — Taxiway Echo Closure Immediate Safety Flash',
      'Safety Flash'::public.notice_type, 'Safety Flash'::public.notice_category, 'Critical'::public.notice_priority, 'Active'::public.notice_status,
-     admin_uuid, 'Karim Abdallah', now() - interval '2 hours', now() - interval '2 hours', now() + interval '1 day',
+     admin_uuid, 'Haytham Mezher', now() - interval '2 hours', now() - interval '2 hours', now() + interval '1 day',
      ARRAY['EgyptAir','Air Arabia','flydubai','Qatar Airways','Emirates','Turkish Airlines','Lufthansa','British Airways'],
      62, 24, 15, true, 2, true),
     (notice_002, 'OI-2026-031', 'Revised Boarding Procedure — Gates B12 to B18 Effective Immediately',
@@ -302,7 +320,7 @@ BEGIN
      88, 32, 28, false, 0, true),
     (notice_004, 'GHP-2026-019', 'Updated Baggage Handling Procedures — Oversized Baggage Ramp Area 4',
      'Ground Handling Procedures'::public.notice_type, 'Operational Memo'::public.notice_category, 'Medium'::public.notice_priority, 'Active'::public.notice_status,
-     admin_uuid, 'Karim Abdallah', now() - interval '3 days', now() - interval '1 day', now() + interval '87 days',
+     admin_uuid, 'Haytham Mezher', now() - interval '3 days', now() - interval '1 day', now() + interval '87 days',
      ARRAY['EgyptAir','Air Arabia','flydubai','Emirates'],
      100, 12, 12, false, 0, false),
     (notice_005, 'FOU-2026-015', 'Flight Operations Update — RNAV Approach Procedure Changes Cairo RWY 05C',
@@ -322,7 +340,7 @@ BEGIN
      72, 24, 17, false, 0, false),
     (notice_008, 'EN-2026-008', 'Emergency Notification — Khamsin Weather Disruption Ground Operations Suspended',
      'Emergency Notification'::public.notice_type, 'Urgent Notice'::public.notice_category, 'Critical'::public.notice_priority, 'Expired'::public.notice_status,
-     admin_uuid, 'Karim Abdallah', now() - interval '8 days', now() - interval '8 days', now() - interval '7 days',
+     admin_uuid, 'Haytham Mezher', now() - interval '8 days', now() - interval '8 days', now() - interval '7 days',
      ARRAY['EgyptAir','Air Arabia','flydubai','Qatar Airways','Emirates','Turkish Airlines','Lufthansa','British Airways'],
      96, 32, 31, false, 0, true),
     (notice_009, 'SB-2026-005', 'Service Bulletin — Ground Power Unit Fleet Maintenance Downtime Schedule',

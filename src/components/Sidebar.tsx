@@ -24,15 +24,21 @@ const navItems: NavItem[] = [
   { id: 'nav-safety-flash', label: 'Safety Flash', href: '/safety-flash', icon: 'BoltIcon', group: 'Operations' },
   { id: 'nav-sf-hud', label: 'Safety Flash HUD', href: '/safety-flash-hud', icon: 'BoltIcon', group: 'Compliance', badgeVariant: 'critical' },
   { id: 'nav-receipts', label: 'Read Receipts', href: '/read-receipt-dashboard', icon: 'CheckCircleIcon', group: 'Compliance' },
+  { id: 'nav-ack-tracker', label: 'Ack Tracker', href: '/acknowledgement-tracker', icon: 'FingerPrintIcon', group: 'Compliance' },
+  { id: 'nav-notice-ack-status', label: 'Notice Ack Status', href: '/notice-ack-status', icon: 'ClipboardDocumentCheckIcon', group: 'Compliance' },
   { id: 'nav-reports', label: 'Reporting Dashboard', href: '/reporting-dashboard', icon: 'ChartBarIcon', group: 'Compliance', hideForViewers: true },
   { id: 'nav-airline-compliance', label: 'Airline Compliance', href: '/airline-compliance-status', icon: 'BuildingOffice2Icon', group: 'Compliance' },
   { id: 'nav-audit', label: 'Compliance & Audit Export', href: '/compliance-audit-export', icon: 'ShieldCheckIcon', group: 'Compliance' },
+  { id: 'nav-compliance-report', label: 'Compliance Reports', href: '/compliance-report', icon: 'DocumentChartBarIcon', group: 'Compliance' },
+  { id: 'nav-monthly-scorecards', label: 'Monthly Scorecards', href: '/monthly-scorecards', icon: 'CalendarDaysIcon', group: 'Compliance' },
   { id: 'nav-notifications', label: 'Notifications', href: '/notifications', icon: 'InboxIcon', group: 'Administration' },
   { id: 'nav-users', label: 'User Access Management', href: '/user-access-management', icon: 'UsersIcon', group: 'Administration', adminOnly: true },
   { id: 'nav-directory', label: 'Airline Directory', href: '/notice-management', icon: 'BuildingOfficeIcon', group: 'Administration' },
   { id: 'nav-documents', label: 'Documentation Library', href: '/documentation-library', icon: 'FolderOpenIcon', group: 'Administration' },
   { id: 'nav-doc-control', label: 'Documentation Control', href: '/documentation-control', icon: 'DocumentCheckIcon', group: 'Administration', adminOnly: true },
+  { id: 'nav-aviation-docs', label: 'Aviation Documents', href: '/aviation-documents', icon: 'ClipboardDocumentListIcon', group: 'Administration' },
   { id: 'nav-audit-log', label: 'System Audit Log', href: '/system-audit-log', icon: 'ClipboardDocumentListIcon', group: 'System', adminOnly: true },
+  { id: 'nav-escalation-config', label: 'Escalation Config', href: '/escalation-config', icon: 'AdjustmentsHorizontalIcon', group: 'System', adminOnly: true },
   { id: 'nav-settings', label: 'Settings', href: '/notice-management', icon: 'Cog6ToothIcon', group: 'System' },
 ];
 
@@ -169,11 +175,11 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
 
         {(!collapsed || isMobile) && (
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
-            <AppLogo size={30} />
+            <AppLogo size={44} />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span
-                  className="font-bold tracking-widest text-lg"
+                  className="font-bold tracking-widest text-lg text-sky-300"
                   style={{
                     color: 'var(--cockpit-amber)',
                     fontFamily: "'Orbitron', 'Share Tech Mono', monospace",
@@ -182,6 +188,17 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                   }}
                 >
                   MEAG
+                </span>
+                <span
+                  className="font-bold tracking-widest text-lg text-[rgba(235,255,254,1)]"
+                  style={{
+                    color: '#0a1f44',
+                    fontFamily: "'Orbitron', 'Share Tech Mono', monospace",
+                    letterSpacing: '0.12em',
+                    textShadow: '0 0 8px rgba(10,31,68,0.4)',
+                  }}
+                >
+                  AeroSign
                 </span>
               </div>
               <p
@@ -199,7 +216,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
             </div>
           </Link>
         )}
-        {collapsed && !isMobile && <AppLogo size={28} />}
+        {collapsed && !isMobile && <AppLogo size={40} />}
         <button
           onClick={onToggle}
           className="btn-ghost p-1.5 flex-shrink-0"
@@ -300,7 +317,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                       <Link
                         href={item.href}
                         title={collapsed ? item.label : undefined}
-                        className={`flex items-center gap-2.5 px-2 py-1.5 text-sm font-medium transition-all duration-150 relative group ${
+                        className={`flex items-center gap-2.5 px-2 text-sm font-medium transition-all duration-150 relative group ${
                           active ? 'nav-active' : ''
                         }`}
                         style={{
@@ -309,6 +326,9 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                           borderRadius: '2px',
                           background: active ? undefined : 'transparent',
                           textShadow: active ? '0 0 10px rgba(255,184,0,0.4)' : 'none',
+                          minHeight: '44px',
+                          paddingTop: '10px',
+                          paddingBottom: '10px',
                         }}
                         onMouseEnter={(e) => {
                           if (!active) {
@@ -326,7 +346,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                         {/* Active indicator pip */}
                         {active && (
                           <span
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r"
                             style={{
                               background: 'var(--cockpit-amber)',
                               boxShadow: '0 0 6px var(--cockpit-amber)',
@@ -335,7 +355,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                         )}
                         <Icon
                           name={item.icon as Parameters<typeof Icon>[0]['name']}
-                          size={14}
+                          size={16}
                           className="flex-shrink-0"
                           style={{
                             opacity: active ? 1 : 0.6,
@@ -346,7 +366,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                           <span
                             className="truncate flex-1"
                             style={{
-                              fontSize: '0.72rem',
+                              fontSize: '0.75rem',
                               letterSpacing: '0.03em',
                               fontFamily: "'Rajdhani', sans-serif",
                               fontWeight: active ? 600 : 500,

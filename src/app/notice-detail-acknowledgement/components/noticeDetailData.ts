@@ -6,7 +6,7 @@ export const noticeDetail = {
   category: 'Safety Flash',
   priority: 'Critical' as const,
   status: 'Active' as const,
-  publishedBy: 'Karim Abdallah',
+  publishedBy: 'Haytham Mezher',
   publishedByRole: 'Administrator',
   publishedDate: '09/09/2026 08:14 EET',
   effectiveDate: '09/09/2026 08:14 EET',
@@ -61,7 +61,7 @@ This notice requires MANDATORY ACKNOWLEDGEMENT within 4 hours of receipt.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Karim Abdallah
+Haytham Mezher
 Administrator — MEAG Notices Platform
 Airside Operations & Safety Department
 Middle East Aviation Ground Handling (MEAG)`,
@@ -91,9 +91,9 @@ Middle East Aviation Ground Handling (MEAG)`,
   ],
 
   auditTrail: [
-    { id: 'audit-001', action: 'Created', user: 'Karim Abdallah', role: 'Administrator', timestamp: '09/09/2026 08:05 EET', detail: 'Notice draft created' },
+    { id: 'audit-001', action: 'Created', user: 'Haytham Mezher', role: 'Administrator', timestamp: '09/09/2026 08:05 EET', detail: 'Notice draft created' },
     { id: 'audit-002', action: 'Approved', user: 'Mohamed El-Sayed', role: 'Dept. Head', timestamp: '09/09/2026 08:10 EET', detail: 'Approved for immediate publication' },
-    { id: 'audit-003', action: 'Published', user: 'Karim Abdallah', role: 'Administrator', timestamp: '09/09/2026 08:14 EET', detail: 'Published — Email, SMS, WhatsApp, Push triggered' },
+    { id: 'audit-003', action: 'Published', user: 'Haytham Mezher', role: 'Administrator', timestamp: '09/09/2026 08:14 EET', detail: 'Published — Email, SMS, WhatsApp, Push triggered' },
     { id: 'audit-004', action: 'Acknowledged', user: 'Omar Farid', role: 'Station Manager', timestamp: '09/09/2026 08:31 EET', detail: 'EgyptAir — Signed: Omar Farid' },
     { id: 'audit-005', action: 'Acknowledged', user: 'Rania Hassan', role: 'Duty Manager', timestamp: '09/09/2026 08:44 EET', detail: 'flydubai — Signed: Rania Hassan' },
     { id: 'audit-006', action: 'Acknowledged', user: 'Saeed Al-Mansoori', role: 'Station Manager', timestamp: '09/09/2026 08:55 EET', detail: 'flydubai — Signed: Saeed Al-Mansoori' },

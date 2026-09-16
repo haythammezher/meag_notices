@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import Icon from '@/components/ui/AppIcon';
+import AirlineLogo from '@/components/ui/AirlineLogo';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -304,8 +305,8 @@ export default function AirlineComplianceStatusContent() {
                 >
                   {/* Airline */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-xs" style={{ background: compBg, color: compColor, fontFamily: "'Share Tech Mono', monospace" }}>
-                      {row.iata}
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: compBg }}>
+                      <AirlineLogo iata={row.iata} name={row.airline} size={36} className="rounded-lg" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{row.airline}</p>
