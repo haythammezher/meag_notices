@@ -15,7 +15,7 @@ interface AppLogoProps {
 const AppLogo = memo(function AppLogo({
   src = '/assets/images/ChatGPT_Image_Sep_10__2026__10_52_11_AM-1789026824568.png',
   iconName = 'SparklesIcon',
-  size = 64,
+  size = 96,
   className = '',
   onClick,
 }: AppLogoProps) {

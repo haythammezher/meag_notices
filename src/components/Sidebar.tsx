@@ -175,7 +175,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
 
         {(!collapsed || isMobile) && (
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
-            <AppLogo size={30} />
+            <AppLogo size={44} />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span
@@ -216,7 +216,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
             </div>
           </Link>
         )}
-        {collapsed && !isMobile && <AppLogo size={28} />}
+        {collapsed && !isMobile && <AppLogo size={40} />}
         <button
           onClick={onToggle}
           className="btn-ghost p-1.5 flex-shrink-0"
