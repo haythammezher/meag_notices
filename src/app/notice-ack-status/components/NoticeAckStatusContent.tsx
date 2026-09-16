@@ -449,6 +449,23 @@ export default function NoticeAckStatusContent() {
         {/* ── Main Content ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
 
+          {/* Mobile notice selector — shown only on small screens */}
+          <div className="lg:hidden px-4 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--card)' }}>
+            <div className="flex items-center gap-2">
+              <label className="text-xs flex-shrink-0" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.55rem' }}>NOTICE:</label>
+              <select
+                value={selectedNoticeId}
+                onChange={(e) => handleSelectNotice(e.target.value)}
+                className="flex-1 px-2 py-2 rounded text-xs outline-none"
+                style={{ background: 'var(--input)', border: '1px solid var(--border)', color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif", minHeight: '40px' }}
+              >
+                {activeNotices.map((n) => (
+                  <option key={n.id} value={n.id}>{n.refNumber} — {n.title.slice(0, 40)}{n.title.length > 40 ? '…' : ''}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Notice Header Bar */}
           <div className="px-6 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,184,0,0.02)' }}>
             <div className="flex flex-wrap items-start gap-3 justify-between">

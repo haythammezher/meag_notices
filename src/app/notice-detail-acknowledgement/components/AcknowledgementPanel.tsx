@@ -437,15 +437,16 @@ export default function AcknowledgementPanel({ notice }: AcknowledgementPanelPro
 
         {/* Confirmation checkbox */}
         <label
-          className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border transition-colors hover:bg-muted"
+          className="flex items-start gap-3 cursor-pointer p-4 rounded-lg border transition-colors hover:bg-muted"
           style={{
             borderColor: watchConfirmed ? 'var(--primary)' : 'var(--border)',
             background: watchConfirmed ? 'rgba(245,158,11,0.04)' : 'transparent',
+            minHeight: '60px',
           }}
         >
           <input
             type="checkbox"
-            className="w-4 h-4 mt-0.5 flex-shrink-0"
+            className="w-5 h-5 mt-0.5 flex-shrink-0"
             style={{ accentColor: 'var(--primary)' }}
             {...register('confirmed', { required: 'You must confirm you have read and understood this notice' })}
           />
@@ -464,8 +465,8 @@ export default function AcknowledgementPanel({ notice }: AcknowledgementPanelPro
         <button
           type="submit"
           disabled={!canSubmit}
-          className="btn-primary w-full py-3 text-sm font-bold"
-          style={{ opacity: !canSubmit ? 0.5 : 1 }}
+          className="btn-primary w-full text-sm font-bold"
+          style={{ opacity: !canSubmit ? 0.5 : 1, minHeight: '52px', fontSize: '0.95rem' }}
         >
           {submitting ? (
             <>

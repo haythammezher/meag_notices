@@ -305,7 +305,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                       <Link
                         href={item.href}
                         title={collapsed ? item.label : undefined}
-                        className={`flex items-center gap-2.5 px-2 py-1.5 text-sm font-medium transition-all duration-150 relative group ${
+                        className={`flex items-center gap-2.5 px-2 text-sm font-medium transition-all duration-150 relative group ${
                           active ? 'nav-active' : ''
                         }`}
                         style={{
@@ -314,6 +314,9 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                           borderRadius: '2px',
                           background: active ? undefined : 'transparent',
                           textShadow: active ? '0 0 10px rgba(255,184,0,0.4)' : 'none',
+                          minHeight: '44px',
+                          paddingTop: '10px',
+                          paddingBottom: '10px',
                         }}
                         onMouseEnter={(e) => {
                           if (!active) {
@@ -331,7 +334,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                         {/* Active indicator pip */}
                         {active && (
                           <span
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r"
                             style={{
                               background: 'var(--cockpit-amber)',
                               boxShadow: '0 0 6px var(--cockpit-amber)',
@@ -340,7 +343,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                         )}
                         <Icon
                           name={item.icon as Parameters<typeof Icon>[0]['name']}
-                          size={14}
+                          size={16}
                           className="flex-shrink-0"
                           style={{
                             opacity: active ? 1 : 0.6,
@@ -351,7 +354,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                           <span
                             className="truncate flex-1"
                             style={{
-                              fontSize: '0.72rem',
+                              fontSize: '0.75rem',
                               letterSpacing: '0.03em',
                               fontFamily: "'Rajdhani', sans-serif",
                               fontWeight: active ? 600 : 500,

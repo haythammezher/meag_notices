@@ -552,6 +552,32 @@ export default function ComplianceReportContent() {
         {/* ── Main Content ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
 
+          {/* Mobile notice selector — shown only on small screens */}
+          <div className="lg:hidden px-4 py-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--card)' }}>
+            <div className="flex items-center gap-2">
+              <label className="text-xs flex-shrink-0" style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace", fontSize: '0.55rem' }}>NOTICE:</label>
+              <select
+                value={selectedNoticeId}
+                onChange={(e) => { setSelectedNoticeId(e.target.value); setReportData(null); }}
+                className="flex-1 px-2 py-2 rounded text-xs outline-none"
+                style={{ background: 'var(--input)', border: '1px solid var(--border)', color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif", minHeight: '40px' }}
+              >
+                {filteredNotices.map((n) => (
+                  <option key={n.id} value={n.id}>{n.refNumber} — {n.title.slice(0, 40)}{n.title.length > 40 ? '…' : ''}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleGenerate}
+                disabled={generating}
+                className="flex items-center gap-1.5 px-3 py-2 rounded font-bold flex-shrink-0"
+                style={{ background: 'var(--cockpit-amber)', color: '#000', fontFamily: "'Orbitron', monospace", fontSize: '0.55rem', letterSpacing: '0.08em', minHeight: '40px' }}
+              >
+                {generating ? <div className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" /> : <Icon name="DocumentChartBarIcon" size={12} />}
+                {generating ? 'GEN…' : 'GENERATE'}
+              </button>
+            </div>
+          </div>
+
           {!reportData ? (
             /* Empty State */
             <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6">

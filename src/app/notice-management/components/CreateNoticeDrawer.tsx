@@ -134,26 +134,26 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Overlay */}
-      <div className="flex-1 bg-black/60" onClick={onClose} />
+      <div className="flex-1 bg-black/60 hidden sm:block" onClick={onClose} />
 
-      {/* Drawer */}
+      {/* Drawer — full screen on mobile, max-w-2xl on desktop */}
       <div
-        className="w-full max-w-2xl h-full flex flex-col shadow-2xl"
+        className="w-full sm:max-w-2xl h-full flex flex-col shadow-2xl"
         style={{ background: 'var(--card)', borderLeft: '1px solid var(--border)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0" style={{ borderColor: 'var(--border)' }}>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b flex-shrink-0" style={{ borderColor: 'var(--border)' }}>
           <div>
             <h2 className="text-base font-bold" style={{ color: 'var(--foreground)' }}>Create Operational Notice</h2>
             <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Step {step + 1} of {steps.length} — {steps[step].label}</p>
           </div>
-          <button className="btn-ghost p-2" onClick={onClose} aria-label="Close drawer">
+          <button className="btn-ghost p-2.5" style={{ minWidth: '40px', minHeight: '40px' }} onClick={onClose} aria-label="Close drawer">
             <Icon name="XMarkIcon" size={20} />
           </button>
         </div>
 
         {/* Step progress */}
-        <div className="px-6 pt-4 pb-3 border-b flex-shrink-0" style={{ borderColor: 'var(--border)' }}>
+        <div className="px-4 sm:px-6 pt-4 pb-3 border-b flex-shrink-0" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-0">
             {steps.map((s, i) => (
               <React.Fragment key={s.id}>
@@ -162,7 +162,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                   onClick={() => i < step && setStep(i)}
                 >
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
                     style={{
                       background: i < step ? 'var(--primary)' : i === step ? 'rgba(245,158,11,0.2)' : 'var(--muted)',
                       color: i < step ? 'var(--primary-foreground)' : i === step ? 'var(--primary)' : 'var(--muted-foreground)',
@@ -184,13 +184,13 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
         </div>
 
         {/* Form body */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin px-6 py-5">
+        <div className="flex-1 overflow-y-auto scrollbar-thin px-4 sm:px-6 py-5">
           {step === 0 && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label-field">Notice Type *</label>
-                  <select className="input-field text-sm" {...register('type', { required: 'Notice type is required' })}>
+                  <select className="input-field text-sm" style={{ minHeight: '44px' }} {...register('type', { required: 'Notice type is required' })}>
                     <option value="">Select type...</option>
                     {['Operational Instructions', 'Safety Flash', 'Airside Notice', 'Ground Handling Procedures', 'Security Directive', 'Flight Operations Update', 'Emergency Notification', 'Service Bulletin', 'Airline Memo', 'Regulatory Update'].map((t) => (
                       <option key={`type-${t}`} value={t}>{t}</option>
@@ -200,7 +200,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                 </div>
                 <div>
                   <label className="label-field">Category *</label>
-                  <select className="input-field text-sm" {...register('category', { required: 'Category is required' })}>
+                  <select className="input-field text-sm" style={{ minHeight: '44px' }} {...register('category', { required: 'Category is required' })}>
                     <option value="">Select category...</option>
                     {['Safety Flash', 'Operational Memo', 'Urgent Notice', 'General Information'].map((c) => (
                       <option key={`cat-${c}`} value={c}>{c}</option>
@@ -210,7 +210,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label-field">Priority Level *</label>
                   <div className="flex gap-2 flex-wrap">
@@ -220,11 +220,14 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                         <label key={`prio-${p}`} className="flex items-center gap-1.5 cursor-pointer">
                           <input type="radio" value={p} {...register('priority')} className="sr-only" />
                           <span
-                            className="px-2.5 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer"
+                            className="px-3 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer"
                             style={{
                               background: watchPriority === p ? `${colors[p]}20` : 'transparent',
                               borderColor: watchPriority === p ? colors[p] : 'var(--border)',
                               color: watchPriority === p ? colors[p] : 'var(--muted-foreground)',
+                              minHeight: '36px',
+                              display: 'flex',
+                              alignItems: 'center',
                             }}
                           >
                             {p}
@@ -236,7 +239,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                 </div>
                 <div>
                   <label className="label-field">Reference Number</label>
-                  <input type="text" className="input-field text-sm font-mono" {...register('refNumber')} readOnly style={{ opacity: 0.7 }} />
+                  <input type="text" className="input-field text-sm font-mono" style={{ minHeight: '44px' }} {...register('refNumber')} readOnly style={{ opacity: 0.7, minHeight: '44px' } as React.CSSProperties} />
                   <p className="text-2xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Auto-generated — editable if needed</p>
                 </div>
               </div>
@@ -247,6 +250,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                   type="text"
                   placeholder="e.g. Airside Vehicle Incident — Taxiway Echo Closure Immediate Safety Flash"
                   className="input-field text-sm"
+                  style={{ minHeight: '44px' }}
                   {...register('title', { required: 'Notice title is required', minLength: { value: 10, message: 'Title must be at least 10 characters' } })}
                 />
                 {errors.title && <p className="mt-1 text-xs" style={{ color: '#EF4444' }}>{errors.title.message}</p>}
@@ -255,35 +259,35 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label-field">Effective Date *</label>
-                  <input type="date" className="input-field text-sm" {...register('effectiveDate', { required: 'Effective date is required' })} />
+                  <input type="date" className="input-field text-sm" style={{ minHeight: '44px' }} {...register('effectiveDate', { required: 'Effective date is required' })} />
                 </div>
                 <div>
                   <label className="label-field">Effective Time</label>
-                  <input type="time" className="input-field text-sm" {...register('effectiveTime')} />
+                  <input type="time" className="input-field text-sm" style={{ minHeight: '44px' }} {...register('effectiveTime')} />
                 </div>
                 <div>
                   <label className="label-field">Expiry Date *</label>
-                  <input type="date" className="input-field text-sm" {...register('expiryDate', { required: 'Expiry date is required' })} />
+                  <input type="date" className="input-field text-sm" style={{ minHeight: '44px' }} {...register('expiryDate', { required: 'Expiry date is required' })} />
                 </div>
                 <div>
                   <label className="label-field">Expiry Time</label>
-                  <input type="time" className="input-field text-sm" {...register('expiryTime')} />
+                  <input type="time" className="input-field text-sm" style={{ minHeight: '44px' }} {...register('expiryTime')} />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="label-field mb-0">Target Airlines *</label>
-                  <button type="button" className="text-xs font-medium" style={{ color: 'var(--primary)' }} onClick={toggleAllAirlines}>
+                  <button type="button" className="text-xs font-medium px-3 py-2" style={{ color: 'var(--primary)' }} onClick={toggleAllAirlines}>
                     {selectedAirlines.length === airlines.length ? 'Deselect All' : 'Select All'}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {airlines.map((airline) => (
-                    <label key={`airline-chk-${airline}`} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border transition-colors hover:bg-muted" style={{ borderColor: selectedAirlines.includes(airline) ? 'var(--primary)' : 'var(--border)', background: selectedAirlines.includes(airline) ? 'rgba(245,158,11,0.06)' : 'transparent' }}>
+                    <label key={`airline-chk-${airline}`} className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border transition-colors hover:bg-muted" style={{ borderColor: selectedAirlines.includes(airline) ? 'var(--primary)' : 'var(--border)', background: selectedAirlines.includes(airline) ? 'rgba(245,158,11,0.06)' : 'transparent', minHeight: '48px' }}>
                       <input
                         type="checkbox"
-                        className="w-4 h-4"
+                        className="w-5 h-5"
                         style={{ accentColor: 'var(--primary)' }}
                         checked={selectedAirlines.includes(airline)}
                         onChange={() => toggleAirline(airline)}
@@ -305,7 +309,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                 <label className="label-field">Notice Body *</label>
                 <p className="text-xs mb-2" style={{ color: 'var(--muted-foreground)' }}>Write the full operational notice content. Be specific about procedures, locations, timings, and responsible parties.</p>
                 <textarea
-                  rows={14}
+                  rows={12}
                   placeholder="TO: All Airline Station Managers and Ground Operations Personnel&#10;&#10;SUBJECT: [Notice Title]&#10;&#10;1. BACKGROUND&#10;...&#10;&#10;2. ACTION REQUIRED&#10;...&#10;&#10;3. EFFECTIVE DATE&#10;...&#10;&#10;Issued by: MEAG Operations Control"
                   className="input-field text-sm resize-none font-mono"
                   {...register('body', { required: 'Notice body is required' })}
@@ -316,13 +320,13 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
               <div>
                 <label className="label-field">Attachments</label>
                 <div
-                  className="border-2 border-dashed rounded-xl p-8 text-center transition-colors hover:border-primary cursor-pointer"
+                  className="border-2 border-dashed rounded-xl p-6 text-center transition-colors hover:border-primary cursor-pointer"
                   style={{ borderColor: 'var(--border)' }}
                 >
                   <Icon name="CloudArrowUpIcon" size={32} className="mx-auto mb-2" style={{ color: 'var(--muted-foreground)' } as React.CSSProperties} />
                   <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>Drop files here or click to upload</p>
                   <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>PDF, DOC, DOCX, PNG, JPG — Max 25MB per file</p>
-                  <button type="button" className="btn-secondary text-xs mt-3">
+                  <button type="button" className="btn-secondary text-xs mt-3" style={{ minHeight: '40px' }}>
                     <Icon name="PaperClipIcon" size={14} />
                     Browse Files
                   </button>
@@ -331,7 +335,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
 
               <div>
                 <label className="label-field">Related Documents</label>
-                <input type="text" placeholder="e.g. Ground Operations Manual Section 4.3, ECAA Circular 2026-14" className="input-field text-sm" />
+                <input type="text" placeholder="e.g. Ground Operations Manual Section 4.3, ECAA Circular 2026-14" className="input-field text-sm" style={{ minHeight: '44px' }} />
               </div>
             </div>
           )}
@@ -339,14 +343,14 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
           {step === 2 && (
             <div className="space-y-5">
               <div className="p-4 rounded-xl border" style={{ borderColor: 'var(--border)', background: 'var(--muted)' }}>
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1">
                     <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>Require Acknowledgement</p>
                     <p className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>Recipients must click &ldquo;I have read and understood this notice&rdquo;</p>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
                     <input type="checkbox" className="sr-only peer" defaultChecked {...register('requireAck')} />
-                    <div className="w-10 h-5 rounded-full peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" style={{ background: 'var(--primary)' }} />
+                    <div className="w-12 h-6 rounded-full peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" style={{ background: 'var(--primary)' }} />
                   </label>
                 </div>
               </div>
@@ -358,7 +362,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                   {[4, 8, 12, 24, 48].map((h) => (
                     <label key={`deadline-${h}`} className="cursor-pointer">
                       <input type="radio" value={h} className="sr-only peer" {...register('ackDeadlineHours')} />
-                      <span className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary" style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}>
+                      <span className="px-4 py-2.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary inline-flex items-center" style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)', minHeight: '40px' }}>
                         {h}h
                       </span>
                     </label>
@@ -367,14 +371,14 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
               </div>
 
               <div className="p-4 rounded-xl border" style={{ borderColor: 'var(--border)', background: 'var(--muted)' }}>
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1">
                     <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>Require Digital Signature</p>
                     <p className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>For Critical and High priority notices — recipient must type full name as signature</p>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
                     <input type="checkbox" className="sr-only peer" {...register('requireSignature')} />
-                    <div className="w-10 h-5 rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5" style={{ background: 'var(--border)' }} />
+                    <div className="w-12 h-6 rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-6" style={{ background: 'var(--border)' }} />
                   </label>
                 </div>
               </div>
@@ -388,11 +392,11 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                     { label: '48h — Escalation to Station Manager & Regional Manager', icon: 'ExclamationTriangleIcon', active: true },
                   ].map((rule, i) => (
                     <div key={`esc-${i}`} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--muted)' }}>
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.15)', color: 'var(--primary)' }}>
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.15)', color: 'var(--primary)' }}>
                         <Icon name={rule.icon as Parameters<typeof Icon>[0]['name']} size={14} />
                       </div>
                       <span className="text-xs flex-1" style={{ color: 'var(--foreground)' }}>{rule.label}</span>
-                      <span className="text-2xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,0.15)', color: '#22C55E' }}>Active</span>
+                      <span className="text-2xs px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(34,197,94,0.15)', color: '#22C55E' }}>Active</span>
                     </div>
                   ))}
                 </div>
@@ -400,16 +404,16 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
 
               <div>
                 <label className="label-field">Distribution Channels</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {[
                     { key: 'channelEmail', label: 'Email', icon: 'EnvelopeIcon', color: '#3B82F6' },
                     { key: 'channelSms', label: 'SMS', icon: 'DevicePhoneMobileIcon', color: '#22C55E' },
                     { key: 'channelWhatsapp', label: 'WhatsApp Business', icon: 'ChatBubbleLeftEllipsisIcon', color: '#22C55E' },
                     { key: 'channelPush', label: 'Push Notification', icon: 'BellIcon', color: '#8B5CF6' },
                   ].map((ch) => (
-                    <label key={`ch-${ch.key}`} className="flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-muted" style={{ borderColor: 'var(--border)' }}>
-                      <input type="checkbox" className="w-4 h-4" style={{ accentColor: ch.color }} {...register(ch.key as keyof NoticeFormData)} />
-                      <Icon name={ch.icon as Parameters<typeof Icon>[0]['name']} size={16} style={{ color: ch.color } as React.CSSProperties} />
+                    <label key={`ch-${ch.key}`} className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-muted" style={{ borderColor: 'var(--border)', minHeight: '52px' }}>
+                      <input type="checkbox" className="w-5 h-5" style={{ accentColor: ch.color }} {...register(ch.key as keyof NoticeFormData)} />
+                      <Icon name={ch.icon as Parameters<typeof Icon>[0]['name']} size={18} style={{ color: ch.color } as React.CSSProperties} />
                       <span className="text-sm" style={{ color: 'var(--foreground)' }}>{ch.label}</span>
                     </label>
                   ))}
@@ -430,7 +434,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-1">
                 {[
                   { label: 'Notice Type', value: getValues('type') || '—' },
                   { label: 'Category', value: getValues('category') || '—' },
@@ -443,7 +447,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
                   { label: 'Require Acknowledgement', value: getValues('requireAck') ? 'Yes' : 'No' },
                   { label: 'Require Signature', value: getValues('requireSignature') ? 'Yes' : 'No' },
                 ].map((row) => (
-                  <div key={`review-${row.label}`} className="flex justify-between py-2 border-b" style={{ borderColor: 'var(--border)' }}>
+                  <div key={`review-${row.label}`} className="flex justify-between py-2.5 border-b" style={{ borderColor: 'var(--border)' }}>
                     <span className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{row.label}</span>
                     <span className="text-xs font-semibold text-right max-w-[60%]" style={{ color: 'var(--foreground)' }}>{row.value}</span>
                   </div>
@@ -454,10 +458,11 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t flex-shrink-0" style={{ borderColor: 'var(--border)' }}>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-t flex-shrink-0" style={{ borderColor: 'var(--border)' }}>
           <button
             type="button"
             className="btn-secondary text-sm"
+            style={{ minHeight: '44px', paddingLeft: '16px', paddingRight: '16px' }}
             onClick={() => step === 0 ? onClose() : setStep(step - 1)}
           >
             <Icon name={step === 0 ? 'XMarkIcon' : 'ChevronLeftIcon'} size={16} />
@@ -467,6 +472,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
             <button
               type="button"
               className="btn-primary text-sm"
+              style={{ minHeight: '44px', paddingLeft: '20px', paddingRight: '20px' }}
               onClick={() => setStep(step + 1)}
             >
               Continue
@@ -476,6 +482,7 @@ export default function CreateNoticeDrawer({ open, onClose }: CreateNoticeDrawer
             <button
               type="button"
               className="btn-primary text-sm"
+              style={{ minHeight: '44px', paddingLeft: '20px', paddingRight: '20px' }}
               disabled={submitting}
               onClick={handleSubmit(onSubmit)}
             >

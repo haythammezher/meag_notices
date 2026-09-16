@@ -168,14 +168,14 @@ const NoticeTableRow = memo(function NoticeTableRow({ notice, selected, onToggle
       )}
       {show('actions') && (
         <td className="px-3 py-3">
-          <div className={`flex items-center gap-1 transition-opacity ${hovering ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
             <Link href="/notice-detail-acknowledgement" title="View notice details">
-              <button className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-muted" style={{ color: 'var(--muted-foreground)' }}>
+              <button className="w-8 h-8 rounded flex items-center justify-center transition-colors hover:bg-muted" style={{ color: 'var(--muted-foreground)' }}>
                 <Icon name="EyeIcon" size={14} />
               </button>
             </Link>
             <button
-              className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-muted"
+              className="w-8 h-8 rounded flex items-center justify-center transition-colors hover:bg-muted"
               style={{ color: 'var(--muted-foreground)' }}
               title="Edit notice"
               onClick={() => toast.info(`Editing ${notice.refNumber}`)}
@@ -184,7 +184,7 @@ const NoticeTableRow = memo(function NoticeTableRow({ notice, selected, onToggle
             </button>
             {notice.status === 'Active' && notice.ackPercentage < 100 && onEscalate && (
               <button
-                className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-muted"
+                className="w-8 h-8 rounded flex items-center justify-center transition-colors hover:bg-muted"
                 style={{ color: '#F97316' }}
                 title="Escalation automation"
                 onClick={() => onEscalate(notice)}
@@ -193,7 +193,7 @@ const NoticeTableRow = memo(function NoticeTableRow({ notice, selected, onToggle
               </button>
             )}
             <button
-              className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-muted"
+              className="w-8 h-8 rounded flex items-center justify-center transition-colors hover:bg-muted"
               style={{ color: 'var(--muted-foreground)' }}
               title="Download notice PDF"
               onClick={() => toast.success(`Downloading ${notice.refNumber}.pdf`)}
@@ -201,7 +201,7 @@ const NoticeTableRow = memo(function NoticeTableRow({ notice, selected, onToggle
               <Icon name="ArrowDownTrayIcon" size={14} />
             </button>
             <button
-              className="w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-muted"
+              className="w-8 h-8 rounded flex items-center justify-center transition-colors hover:bg-muted"
               style={{ color: '#EF4444' }}
               title="Delete notice — this cannot be undone"
               onClick={() => toast.error(`Notice ${notice.refNumber} deleted`)}

@@ -282,7 +282,7 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
       {/* Actions */}
       <div className="flex items-center gap-1.5">
         {/* Create Notice */}
-        <Link href="/notice-management" className="btn-primary hidden sm:inline-flex">
+        <Link href="/notice-management" className="btn-primary hidden sm:inline-flex" style={{ minHeight: '36px' }}>
           <Icon name="PlusIcon" size={11} />
           New Notice
         </Link>
@@ -292,13 +292,14 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
           <Link
             href="/safety-flash"
             title={`${pendingAckCount} Safety Flash${pendingAckCount > 1 ? 'es' : ''} pending your acknowledgement`}
-            className="relative flex items-center gap-1.5 px-2.5 py-1.5 transition-all"
+            className="relative flex items-center gap-1.5 px-2.5 py-2 transition-all"
             style={{
               background: 'rgba(255, 32, 32, 0.08)',
               border: '1px solid rgba(255, 32, 32, 0.35)',
               borderRadius: '2px',
               boxShadow: '0 0 12px rgba(255,32,32,0.15)',
               textDecoration: 'none',
+              minHeight: '36px',
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.background = 'rgba(255,32,32,0.14)';
@@ -311,6 +312,7 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
           >
             <Icon name="ExclamationTriangleIcon" size={12} style={{ color: '#FF2020', flexShrink: 0 } as React.CSSProperties} />
             <span
+              className="hidden sm:inline"
               style={{
                 fontFamily: "'Share Tech Mono', monospace",
                 fontSize: '0.55rem',
@@ -323,21 +325,27 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
             >
               {pendingAckCount > 9 ? '9+' : pendingAckCount} ACK PENDING
             </span>
+            <span
+              className="sm:hidden"
+              style={{
+                fontFamily: "'Share Tech Mono', monospace",
+                fontSize: '0.55rem',
+                color: '#FF2020',
+                fontWeight: 700,
+              }}
+            >
+              {pendingAckCount > 9 ? '9+' : pendingAckCount}
+            </span>
           </Link>
         )}
 
         {/* Notifications */}
         <div className="relative">
           <button
-            className="btn-ghost p-2 relative"
+            className="btn-ghost p-2.5 relative"
+            style={{ minWidth: '40px', minHeight: '40px' }}
             onClick={() => { setNotifOpen(!notifOpen); if (!notifOpen) fetchNotifications(); }}
             aria-label="Notifications"
-            style={{
-              border: '1px solid transparent',
-              borderRadius: '2px',
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,184,0,0.2)'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'transparent'; }}
           >
             <Icon
               name="BellIcon"
@@ -364,8 +372,9 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
 
           {notifOpen && (
             <div
-              className="absolute right-0 top-full mt-2 w-80 shadow-2xl z-50 fade-in"
+              className="absolute right-0 top-full mt-2 shadow-2xl z-50 fade-in"
               style={{
+                width: 'min(320px, calc(100vw - 16px))',
                 background: 'linear-gradient(180deg, #071020 0%, #040C18 100%)',
                 border: '1px solid rgba(255,184,0,0.15)',
                 borderRadius: '3px',
@@ -378,7 +387,7 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
                 style={{ background: 'linear-gradient(90deg, transparent, rgba(255,184,0,0.5), transparent)' }}
               />
               <div
-                className="flex items-center justify-between px-4 py-2.5"
+                className="flex items-center justify-between px-4 py-3"
                 style={{ borderBottom: '1px solid rgba(255,184,0,0.08)' }}
               >
                 <span
@@ -417,6 +426,7 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
                         color: 'var(--cockpit-amber)',
                         letterSpacing: '0.06em',
                         textTransform: 'uppercase',
+                        padding: '4px 8px',
                       }}
                       onClick={markAllRead}
                     >
@@ -449,11 +459,9 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
                   {notifications.map((n) => (
                     <li
                       key={n.id}
-                      className="px-4 py-2.5 transition-colors cursor-pointer"
-                      style={{ background: n.is_read ? 'transparent' : 'rgba(255,184,0,0.02)' }}
+                      className="px-4 py-3 transition-colors cursor-pointer"
+                      style={{ background: n.is_read ? 'transparent' : 'rgba(255,184,0,0.02)', minHeight: '52px' }}
                       onClick={() => markOneRead(n.id)}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,184,0,0.04)'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = n.is_read ? 'transparent' : 'rgba(255,184,0,0.02)'; }}
                     >
                       <div className="flex items-start gap-3">
                         <div
@@ -489,10 +497,10 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
                 </ul>
               )}
 
-              <div className="px-4 py-2" style={{ borderTop: '1px solid rgba(255,184,0,0.06)' }}>
+              <div className="px-4 py-3" style={{ borderTop: '1px solid rgba(255,184,0,0.06)' }}>
                 <Link
                   href="/notifications"
-                  className="text-xs font-medium w-full text-center block"
+                  className="text-xs font-medium w-full text-center block py-1"
                   style={{
                     color: 'var(--cockpit-amber)',
                     fontFamily: "'Share Tech Mono', monospace",
@@ -512,7 +520,7 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
         {/* User avatar */}
         <div className="flex items-center gap-2">
           <div
-            className="w-7 h-7 flex items-center justify-center text-xs font-bold cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center text-xs font-bold cursor-pointer"
             style={{
               background: 'linear-gradient(135deg, rgba(255,184,0,0.15) 0%, rgba(255,184,0,0.05) 100%)',
               color: 'var(--cockpit-amber)',
@@ -554,7 +562,8 @@ export default function Topbar({ pageTitle, pageSubtitle, onMobileMenuOpen }: To
             </div>
           )}
           <button
-            className="btn-ghost p-1.5"
+            className="btn-ghost p-2.5"
+            style={{ minWidth: '40px', minHeight: '40px' }}
             title="Sign out"
             onClick={() => signOut()}
           >

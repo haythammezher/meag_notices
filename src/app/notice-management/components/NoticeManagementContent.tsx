@@ -8,6 +8,7 @@ import CreateNoticeDrawer from './CreateNoticeDrawer';
 import NoticeTableRow from './NoticeTableRow';
 import { type Notice, type Priority, type NoticeStatus, type NoticeType } from './noticeData';
 import EscalationAutomationPanel from './EscalationAutomationPanel';
+import Link from 'next/link';
 
 const ITEMS_PER_PAGE_OPTIONS = [10, 15, 25, 50];
 
@@ -257,19 +258,19 @@ export default function NoticeManagementContent() {
   return (
     <>
       {/* KPI strip */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         {[
           { id: 'kpi-active', label: 'Active Notices', value: loading ? '—' : kpiData.active, icon: 'DocumentTextIcon', color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' },
           { id: 'kpi-compliance', label: 'Compliance Rate', value: loading ? '—' : `${kpiData.complianceRate}%`, icon: 'CheckCircleIcon', color: '#22C55E', bg: 'rgba(34,197,94,0.1)' },
           { id: 'kpi-pending', label: 'Pending Ack.', value: loading ? '—' : kpiData.pending, icon: 'ClockIcon', color: '#EAB308', bg: 'rgba(234,179,8,0.1)' },
           { id: 'kpi-overdue', label: 'Overdue (>48h)', value: loading ? '—' : kpiData.overdue, icon: 'ExclamationTriangleIcon', color: '#EF4444', bg: 'rgba(239,68,68,0.1)', alert: !loading && kpiData.overdue > 0 },
         ].map((kpi) => (
-          <div key={kpi.id} className={`card-surface p-4 flex items-center gap-4 ${(kpi as any).alert ? 'card-glow-critical' : ''}`}>
+          <div key={kpi.id} className={`card-surface p-4 flex items-center gap-3 ${(kpi as any).alert ? 'card-glow-critical' : ''}`}>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: kpi.bg }}>
               <Icon name={kpi.icon as Parameters<typeof Icon>[0]['name']} size={20} style={{ color: kpi.color } as React.CSSProperties} />
             </div>
-            <div>
-              <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{kpi.label}</p>
+            <div className="min-w-0">
+              <p className="text-xs font-medium truncate" style={{ color: 'var(--muted-foreground)' }}>{kpi.label}</p>
               <p className="text-2xl font-bold font-tabular" style={{ color: (kpi as any).alert ? '#EF4444' : 'var(--foreground)' }}>{kpi.value}</p>
             </div>
           </div>
@@ -278,47 +279,54 @@ export default function NoticeManagementContent() {
 
       {/* Filters */}
       <div className="card-surface p-4 mb-4">
-        <div className="flex flex-wrap gap-3 items-center">
-          <div className="relative flex-1 min-w-[200px]">
+        <div className="flex flex-col gap-3">
+          {/* Search row */}
+          <div className="relative w-full">
             <Icon name="MagnifyingGlassIcon" size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--muted-foreground)' } as React.CSSProperties} />
             <input
               type="text"
               placeholder="Search notices by title or reference..."
-              className="input-field pl-9 text-sm"
+              className="input-field pl-9 text-sm w-full"
+              style={{ minHeight: '44px' }}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
             />
           </div>
 
-          <select className="input-field text-sm w-auto min-w-[160px]" value={filterType} onChange={(e) => { setFilterType(e.target.value as NoticeType | 'All'); setCurrentPage(1); }}>
-            {noticeTypes.map((t) => <option key={`type-opt-${t}`} value={t}>{t === 'All' ? 'All Types' : t}</option>)}
-          </select>
+          {/* Filter selects — scrollable row on mobile */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <select className="input-field text-sm flex-1 min-w-[130px]" style={{ minHeight: '44px' }} value={filterType} onChange={(e) => { setFilterType(e.target.value as NoticeType | 'All'); setCurrentPage(1); }}>
+              {noticeTypes.map((t) => <option key={`type-opt-${t}`} value={t}>{t === 'All' ? 'All Types' : t}</option>)}
+            </select>
 
-          <select className="input-field text-sm w-auto" value={filterPriority} onChange={(e) => { setFilterPriority(e.target.value as Priority | 'All'); setCurrentPage(1); }}>
-            {priorities.map((p) => <option key={`prio-opt-${p}`} value={p}>{p === 'All' ? 'All Priorities' : p}</option>)}
-          </select>
+            <select className="input-field text-sm flex-1 min-w-[120px]" style={{ minHeight: '44px' }} value={filterPriority} onChange={(e) => { setFilterPriority(e.target.value as Priority | 'All'); setCurrentPage(1); }}>
+              {priorities.map((p) => <option key={`prio-opt-${p}`} value={p}>{p === 'All' ? 'All Priorities' : p}</option>)}
+            </select>
 
-          <select className="input-field text-sm w-auto" value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value as NoticeStatus | 'All'); setCurrentPage(1); }}>
-            {statuses.map((s) => <option key={`status-opt-${s}`} value={s}>{s === 'All' ? 'All Statuses' : s}</option>)}
-          </select>
+            <select className="input-field text-sm flex-1 min-w-[120px]" style={{ minHeight: '44px' }} value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value as NoticeStatus | 'All'); setCurrentPage(1); }}>
+              {statuses.map((s) => <option key={`status-opt-${s}`} value={s}>{s === 'All' ? 'All Statuses' : s}</option>)}
+            </select>
 
-          <select className="input-field text-sm w-auto" value={filterAirline} onChange={(e) => { setFilterAirline(e.target.value); setCurrentPage(1); }}>
-            <option value="All">All Airlines</option>
-            {airlines.map((a) => <option key={`airline-opt-${a}`} value={a}>{a}</option>)}
-          </select>
+            <select className="input-field text-sm flex-1 min-w-[120px]" style={{ minHeight: '44px' }} value={filterAirline} onChange={(e) => { setFilterAirline(e.target.value); setCurrentPage(1); }}>
+              <option value="All">All Airlines</option>
+              {airlines.map((a) => <option key={`airline-opt-${a}`} value={a}>{a}</option>)}
+            </select>
 
-          {(search || filterType !== 'All' || filterPriority !== 'All' || filterStatus !== 'All' || filterAirline !== 'All') && (
-            <button className="btn-ghost text-xs" onClick={() => { setSearch(''); setFilterType('All'); setFilterPriority('All'); setFilterStatus('All'); setFilterAirline('All'); setCurrentPage(1); }}>
-              <Icon name="XMarkIcon" size={14} />
-              Clear filters
-            </button>
-          )}
+            {(search || filterType !== 'All' || filterPriority !== 'All' || filterStatus !== 'All' || filterAirline !== 'All') && (
+              <button className="btn-ghost text-xs px-3 py-2.5" style={{ minHeight: '44px' }} onClick={() => { setSearch(''); setFilterType('All'); setFilterPriority('All'); setFilterStatus('All'); setFilterAirline('All'); setCurrentPage(1); }}>
+                <Icon name="XMarkIcon" size={14} />
+                Clear
+              </button>
+            )}
+          </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          {/* Action row */}
+          <div className="flex items-center gap-2 justify-between">
             {/* Column visibility picker */}
-            <div className="relative" ref={colPickerRef}>
+            <div className="relative hidden sm:block" ref={colPickerRef}>
               <button
-                className="btn-ghost text-xs px-3 py-1.5"
+                className="btn-ghost text-xs px-3 py-2.5"
+                style={{ minHeight: '44px' }}
                 onClick={() => setColPickerOpen((v) => !v)}
                 title="Toggle column visibility"
               >
@@ -327,18 +335,18 @@ export default function NoticeManagementContent() {
               </button>
               {colPickerOpen && (
                 <div
-                  className="absolute right-0 top-full mt-1 z-50 rounded-xl p-3 min-w-[180px] shadow-lg"
+                  className="absolute left-0 top-full mt-1 z-50 rounded-xl p-3 min-w-[180px] shadow-lg"
                   style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
                 >
                   <p className="text-2xs font-semibold mb-2" style={{ color: 'var(--muted-foreground)', letterSpacing: '0.04em' }}>VISIBLE COLUMNS</p>
                   {ALL_COLUMNS.map((col) => (
-                    <label key={col.key} className={`flex items-center gap-2 py-1 ${col.required ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <label key={col.key} className={`flex items-center gap-2 py-2 ${col.required ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                       <input
                         type="checkbox"
                         checked={visibleCols.has(col.key)}
                         onChange={() => toggleCol(col.key)}
                         disabled={col.required}
-                        className="w-3.5 h-3.5 rounded"
+                        className="w-4 h-4 rounded"
                         style={{ accentColor: 'var(--primary)' }}
                       />
                       <span className="text-xs" style={{ color: 'var(--foreground)' }}>{col.label}</span>
@@ -349,9 +357,10 @@ export default function NoticeManagementContent() {
               )}
             </div>
 
-            <button className="btn-primary text-sm" onClick={() => setCreateDrawerOpen(true)}>
+            <button className="btn-primary text-sm ml-auto" style={{ minHeight: '44px', paddingLeft: '16px', paddingRight: '16px' }} onClick={() => setCreateDrawerOpen(true)}>
               <Icon name="PlusIcon" size={16} />
-              Create Notice
+              <span className="hidden sm:inline">Create Notice</span>
+              <span className="sm:hidden">Create</span>
             </button>
           </div>
         </div>
@@ -359,25 +368,25 @@ export default function NoticeManagementContent() {
 
       {/* Bulk actions */}
       {selectedRows.size > 0 && (
-        <div className="card-surface p-3 mb-4 flex items-center gap-3 border" style={{ borderColor: 'var(--primary)', background: 'rgba(245,158,11,0.05)' }}>
+        <div className="card-surface p-3 mb-4 flex flex-wrap items-center gap-3 border" style={{ borderColor: 'var(--primary)', background: 'rgba(245,158,11,0.05)' }}>
           <span className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{selectedRows.size} selected</span>
-          <button className="btn-primary text-xs px-3 py-1.5" onClick={handleBulkPublish}>
+          <button className="btn-primary text-xs px-4 py-2.5" style={{ minHeight: '40px' }} onClick={handleBulkPublish}>
             <Icon name="PaperAirplaneIcon" size={14} />
             Publish
           </button>
-          <button className="btn-ghost text-xs px-3 py-1.5" style={{ color: '#EF4444' }} onClick={handleBulkDelete}>
+          <button className="btn-ghost text-xs px-4 py-2.5" style={{ color: '#EF4444', minHeight: '40px' }} onClick={handleBulkDelete}>
             <Icon name="TrashIcon" size={14} />
             Delete
           </button>
-          <button className="btn-ghost text-xs ml-auto" onClick={() => setSelectedRows(new Set())}>
+          <button className="btn-ghost text-xs ml-auto px-3 py-2.5" style={{ minHeight: '40px' }} onClick={() => setSelectedRows(new Set())}>
             <Icon name="XMarkIcon" size={14} />
             Deselect
           </button>
         </div>
       )}
 
-      {/* Table */}
-      <div className="card-surface overflow-hidden">
+      {/* Desktop Table */}
+      <div className="card-surface overflow-hidden hidden md:block">
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full text-sm min-w-[900px]">
             <thead>
@@ -451,7 +460,7 @@ export default function NoticeManagementContent() {
         {!loading && sorted.length > 0 && (
           <div className="flex items-center justify-between px-4 py-3 border-t" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center gap-2">
-              <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Rows per page:</span>
+              <span className="text-xs hidden sm:inline" style={{ color: 'var(--muted-foreground)' }}>Rows per page:</span>
               <select
                 className="input-field text-xs w-auto py-1"
                 value={itemsPerPage}
@@ -459,25 +468,158 @@ export default function NoticeManagementContent() {
               >
                 {ITEMS_PER_PAGE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
-              <span className="text-xs ml-2" style={{ color: 'var(--muted-foreground)' }}>
+              <span className="text-xs ml-1" style={{ color: 'var(--muted-foreground)' }}>
                 {sorted.length} result{sorted.length !== 1 ? 's' : ''}
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-xs mr-2" style={{ color: 'var(--muted-foreground)' }}>
+              <span className="text-xs mr-2 hidden sm:inline" style={{ color: 'var(--muted-foreground)' }}>
                 {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, sorted.length)} of {sorted.length}
               </span>
-              <button className="btn-ghost p-1.5" disabled={currentPage === 1} onClick={() => setCurrentPage(1)}>
+              <button className="btn-ghost p-2" disabled={currentPage === 1} onClick={() => setCurrentPage(1)}>
                 <Icon name="ChevronDoubleLeftIcon" size={14} />
               </button>
-              <button className="btn-ghost p-1.5" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
+              <button className="btn-ghost p-2" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
                 <Icon name="ChevronLeftIcon" size={14} />
               </button>
-              <button className="btn-ghost p-1.5" disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>
+              <button className="btn-ghost p-2" disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>
                 <Icon name="ChevronRightIcon" size={14} />
               </button>
-              <button className="btn-ghost p-1.5" disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)}>
+              <button className="btn-ghost p-2" disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)}>
                 <Icon name="ChevronDoubleRightIcon" size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile Card List */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="card-surface p-8 flex flex-col items-center gap-3">
+            <Icon name="ArrowPathIcon" size={24} className="animate-spin" style={{ color: 'var(--muted-foreground)' } as React.CSSProperties} />
+            <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>Loading notices...</p>
+          </div>
+        ) : paginated.length === 0 ? (
+          <div className="card-surface p-8 flex flex-col items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--muted)' }}>
+              <Icon name="DocumentTextIcon" size={24} style={{ color: 'var(--muted-foreground)' } as React.CSSProperties} />
+            </div>
+            <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>No notices found</p>
+          </div>
+        ) : (
+          paginated.map((notice) => {
+            const priorityColors: Record<string, string> = { Critical: '#EF4444', High: '#F97316', Medium: '#EAB308', Informational: '#3B82F6' };
+            const statusClasses: Record<string, string> = { Active: 'badge-active', Draft: 'badge-draft', 'Pending Approval': 'badge-pending', Expired: 'badge-expired' };
+            const ackColor = notice.ackPercentage === 100 ? '#00D46A' : notice.ackPercentage >= 75 ? '#1E90FF' : notice.ackPercentage >= 50 ? '#F5C518' : '#FF3B3B';
+            return (
+              <div
+                key={notice.id}
+                className="card-surface p-4 space-y-3"
+                style={{ borderLeft: `3px solid ${priorityColors[notice.priority] || 'var(--border)'}` }}
+              >
+                {/* Header row */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-mono text-xs font-bold" style={{ color: 'var(--primary)' }}>{notice.refNumber}</span>
+                      {notice.escalated && (
+                        <span className="text-2xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(239,68,68,0.15)', color: '#EF4444' }}>
+                          ESC-L{notice.escalationLevel}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--foreground)' }}>{notice.title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>{notice.type}</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 rounded flex-shrink-0 mt-0.5"
+                    style={{ accentColor: 'var(--primary)' }}
+                    checked={selectedRows.has(notice.id)}
+                    onChange={() => toggleRow(notice.id)}
+                  />
+                </div>
+
+                {/* Badges */}
+                <div className="flex flex-wrap gap-2">
+                  <span
+                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                    style={{ background: `${priorityColors[notice.priority]}20`, color: priorityColors[notice.priority] }}
+                  >
+                    {notice.priority}
+                  </span>
+                  <span className={statusClasses[notice.status] || 'badge-draft'}>{notice.status}</span>
+                </div>
+
+                {/* Compliance bar */}
+                {notice.status !== 'Draft' && notice.status !== 'Pending Approval' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Compliance</span>
+                      <span className="text-xs font-bold font-tabular" style={{ color: ackColor }}>{notice.ackPercentage}%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.3)' }}>
+                      <div className="h-full rounded-full transition-all" style={{ width: `${notice.ackPercentage}%`, background: ackColor }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Meta */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <div>
+                    <span style={{ color: 'var(--muted-foreground)' }}>Published: </span>
+                    <span style={{ color: 'var(--secondary-foreground)' }}>{notice.publishedDate.split(',')[0]}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--muted-foreground)' }}>Expires: </span>
+                    <span style={{ color: notice.status === 'Expired' ? '#6B7280' : 'var(--secondary-foreground)' }}>{notice.expiryDate.split(',')[0]}</span>
+                  </div>
+                </div>
+
+                {/* Action buttons — always visible on mobile */}
+                <div className="flex items-center gap-2 pt-1 border-t" style={{ borderColor: 'var(--border)' }}>
+                  <Link href="/notice-detail-acknowledgement" className="flex-1">
+                    <button className="w-full btn-secondary text-xs py-2.5" style={{ minHeight: '40px' }}>
+                      <Icon name="EyeIcon" size={14} />
+                      View
+                    </button>
+                  </Link>
+                  {notice.status === 'Active' && notice.ackPercentage < 100 && (
+                    <button
+                      className="flex-1 btn-ghost text-xs py-2.5"
+                      style={{ color: '#F97316', minHeight: '40px', border: '1px solid rgba(249,115,22,0.3)' }}
+                      onClick={() => setEscalationNotice(notice)}
+                    >
+                      <Icon name="BellAlertIcon" size={14} />
+                      Escalate
+                    </button>
+                  )}
+                  <button
+                    className="w-10 h-10 rounded flex items-center justify-center btn-ghost flex-shrink-0"
+                    style={{ color: '#EF4444' }}
+                    title="Delete notice"
+                  >
+                    <Icon name="TrashIcon" size={16} />
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+
+        {/* Mobile pagination */}
+        {!loading && sorted.length > 0 && (
+          <div className="card-surface flex items-center justify-between px-4 py-3">
+            <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+              {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, sorted.length)} of {sorted.length}
+            </span>
+            <div className="flex items-center gap-1">
+              <button className="btn-ghost p-2.5" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
+                <Icon name="ChevronLeftIcon" size={16} />
+              </button>
+              <button className="btn-ghost p-2.5" disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>
+                <Icon name="ChevronRightIcon" size={16} />
               </button>
             </div>
           </div>
@@ -491,8 +633,8 @@ export default function NoticeManagementContent() {
         <>
           <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setEscalationNotice(null)} />
           <div
-            className="fixed right-0 top-0 h-full z-50 flex flex-col shadow-2xl overflow-y-auto scrollbar-thin"
-            style={{ width: '520px', background: 'var(--card)', borderLeft: '1px solid var(--border)' }}
+            className="fixed right-0 top-0 h-full z-50 flex flex-col shadow-2xl overflow-y-auto scrollbar-thin w-full sm:w-auto"
+            style={{ maxWidth: '520px', background: 'var(--card)', borderLeft: '1px solid var(--border)' }}
           >
             {/* Drawer header */}
             <div className="flex items-center justify-between px-5 py-4 flex-shrink-0 sticky top-0 z-10" style={{ borderBottom: '1px solid var(--border)', background: 'var(--card)' }}>
@@ -502,7 +644,7 @@ export default function NoticeManagementContent() {
                   Manage 12h / 24h / 48h reminder emails
                 </p>
               </div>
-              <button className="btn-ghost p-1.5 rounded-lg" onClick={() => setEscalationNotice(null)}>
+              <button className="btn-ghost p-2.5 rounded-lg" style={{ minWidth: '40px', minHeight: '40px' }} onClick={() => setEscalationNotice(null)}>
                 <Icon name="XMarkIcon" size={18} />
               </button>
             </div>

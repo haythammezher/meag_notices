@@ -774,4 +774,63 @@
     box-shadow: 0 0 6px rgba(255,184,0,0.4);
     flex-shrink: 0;
   }
+
+  /* ── Touch-friendly responsive utilities ── */
+
+  /* Ensure all interactive elements have minimum touch targets */
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost {
+    min-height: 36px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Input fields — comfortable touch height */
+  .input-field {
+    min-height: 40px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent text selection on tap for interactive elements */
+  button, a, label {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Smooth scrolling for mobile overflow containers */
+  .overflow-x-auto,
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile-safe table scroll wrapper */
+  .table-scroll-mobile {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  /* Responsive padding for main content on small screens */
+  @media (max-width: 640px) {
+    .card-surface {
+      border-radius: 4px;
+    }
+
+    /* Larger tap targets for badges in mobile context */
+    .badge-critical,
+    .badge-high,
+    .badge-medium,
+    .badge-informational,
+    .badge-active,
+    .badge-pending,
+    .badge-overdue,
+    .badge-expired,
+    .badge-draft,
+    .badge-acknowledged {
+      padding: 3px 8px;
+      font-size: 0.6rem;
+    }
+  }
 }
