@@ -190,7 +190,7 @@ function SidebarContent({ collapsed, onToggle, navItems, groups, isActive, isMob
                   MEAG
                 </span>
                 <span
-                  className="font-bold tracking-widest text-lg"
+                  className="font-bold tracking-widest text-lg text-[rgba(235,255,254,1)]"
                   style={{
                     color: '#0a1f44',
                     fontFamily: "'Orbitron', 'Share Tech Mono', monospace",
