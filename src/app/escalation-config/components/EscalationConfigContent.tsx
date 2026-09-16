@@ -87,8 +87,8 @@ function NumericInput({
   return (
     <div className="flex flex-col gap-1">
       <label
-        className="text-2xs font-semibold uppercase tracking-widest"
-        style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace" }}
+        className="text-xs font-bold uppercase tracking-widest"
+        style={{ color: 'var(--foreground)', fontFamily: "'Share Tech Mono', monospace", opacity: 0.9 }}
       >
         {label}
       </label>
@@ -97,7 +97,7 @@ function NumericInput({
           type="button"
           onClick={() => onChange(Math.max(min, value - 1))}
           className="w-7 h-7 rounded flex items-center justify-center transition-colors"
-          style={{ background: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}
+          style={{ background: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
         >
           <Icon name="MinusIcon" size={12} />
         </button>
@@ -105,7 +105,7 @@ function NumericInput({
           className="flex items-center gap-1 px-2 h-7 rounded min-w-[52px] justify-center"
           style={{
             background: accent ? `${accent}15` : 'var(--card)',
-            border: `1px solid ${accent ? `${accent}40` : 'var(--border)'}`,
+            border: `1px solid ${accent ? `${accent}60` : 'var(--border)'}`,
           }}
         >
           <span
@@ -114,13 +114,13 @@ function NumericInput({
           >
             {value}
           </span>
-          <span className="text-2xs" style={{ color: 'var(--muted-foreground)' }}>{unit}</span>
+          <span className="text-xs font-semibold" style={{ color: accent ?? 'var(--foreground)', opacity: 0.8 }}>{unit}</span>
         </div>
         <button
           type="button"
           onClick={() => onChange(Math.min(max, value + 1))}
           className="w-7 h-7 rounded flex items-center justify-center transition-colors"
-          style={{ background: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}
+          style={{ background: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
         >
           <Icon name="PlusIcon" size={12} />
         </button>
@@ -155,16 +155,16 @@ function ConfigCard({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div
-            className="px-2.5 py-0.5 rounded-full text-2xs font-bold uppercase tracking-widest"
+            className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-widest"
             style={{ background: tier.bg, color: tier.color, fontFamily: "'Orbitron', monospace" }}
           >
             {tier.label}
           </div>
-          <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{tier.desc}</span>
+          <span className="text-xs font-semibold" style={{ color: 'var(--foreground)', opacity: 0.75 }}>{tier.desc}</span>
         </div>
         {/* Auto-escalate toggle */}
         <div className="flex items-center gap-2">
-          <span className="text-2xs font-semibold uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--foreground)', opacity: 0.8 }}>
             Auto-Trigger
           </span>
           <button
@@ -184,7 +184,7 @@ function ConfigCard({
             />
           </button>
           {config.auto_escalate && (
-            <span className="text-2xs font-semibold" style={{ color: '#22C55E' }}>ON</span>
+            <span className="text-xs font-semibold" style={{ color: '#22C55E' }}>ON</span>
           )}
         </div>
       </div>
@@ -252,8 +252,8 @@ function ConfigCard({
       {/* Notes */}
       <div className="flex flex-col gap-1">
         <label
-          className="text-2xs font-semibold uppercase tracking-widest"
-          style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace" }}
+          className="text-xs font-bold uppercase tracking-widest"
+          style={{ color: 'var(--foreground)', fontFamily: "'Share Tech Mono', monospace", opacity: 0.9 }}
         >
           Notes
         </label>
@@ -274,10 +274,10 @@ function ConfigCard({
 
       {/* Footer */}
       <div className="flex items-center justify-between gap-3">
-        <div className="text-2xs" style={{ color: 'var(--muted-foreground)' }}>
+        <div className="text-xs font-medium" style={{ color: 'var(--foreground)', opacity: 0.7 }}>
           {config.updated_at && config.updated_by_name ? (
             <span>
-              Last saved by <span style={{ color: 'var(--foreground)' }}>{config.updated_by_name}</span>
+              Last saved by <span style={{ color: 'var(--foreground)', fontWeight: 700 }}>{config.updated_by_name}</span>
               {' '}· {new Date(config.updated_at).toLocaleDateString('en-GB')}
             </span>
           ) : (
@@ -455,7 +455,7 @@ export default function EscalationConfigContent() {
               ESCALATION CONFIG
             </h1>
           </div>
-          <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+          <p className="text-sm" style={{ color: 'var(--muted-foreground)', fontWeight: 500 }}>
             Set acknowledgement thresholds, reminder counts, and auto-trigger rules per notice type and airline tier
           </p>
         </div>
@@ -479,7 +479,7 @@ export default function EscalationConfigContent() {
               >
                 {stat.value}
               </span>
-              <span className="text-2xs mt-0.5 text-center" style={{ color: 'var(--muted-foreground)' }}>
+              <span className="text-2xs mt-0.5 text-center font-semibold" style={{ color: 'var(--foreground)', opacity: 0.7 }}>
                 {stat.label}
               </span>
             </div>
@@ -546,8 +546,8 @@ export default function EscalationConfigContent() {
                   />
                   <div className="flex-1 min-w-0">
                     <p
-                      className="text-xs font-semibold truncate"
-                      style={{ color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)' }}
+                      className="text-xs font-bold truncate"
+                      style={{ color: isActive ? 'var(--foreground)' : 'var(--foreground)', opacity: isActive ? 1 : 0.65 }}
                     >
                       {nt}
                     </p>
@@ -592,7 +592,7 @@ export default function EscalationConfigContent() {
                     >
                       {activeNoticeType}
                     </h2>
-                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                    <p className="text-xs font-medium" style={{ color: 'var(--foreground)', opacity: 0.65 }}>
                       Configure thresholds for each airline tier
                     </p>
                   </div>
@@ -638,8 +638,8 @@ export default function EscalationConfigContent() {
                 style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
               >
                 <p
-                  className="text-2xs font-semibold uppercase tracking-widest mb-3"
-                  style={{ color: 'var(--muted-foreground)', fontFamily: "'Share Tech Mono', monospace" }}
+                  className="text-xs font-bold uppercase tracking-widest mb-3"
+                  style={{ color: 'var(--foreground)', fontFamily: "'Share Tech Mono', monospace", opacity: 0.85 }}
                 >
                   Field Reference
                 </p>
@@ -651,8 +651,8 @@ export default function EscalationConfigContent() {
                     { label: 'Max Reminders', color: '#A78BFA', desc: 'Total reminder emails before escalation fires' },
                   ].map((f) => (
                     <div key={f.label} className="flex flex-col gap-0.5">
-                      <span className="text-2xs font-bold" style={{ color: f.color }}>{f.label}</span>
-                      <span className="text-2xs" style={{ color: 'var(--muted-foreground)' }}>{f.desc}</span>
+                      <span className="text-xs font-bold" style={{ color: f.color }}>{f.label}</span>
+                      <span className="text-xs font-medium" style={{ color: 'var(--foreground)', opacity: 0.65 }}>{f.desc}</span>
                     </div>
                   ))}
                 </div>
