@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Icon from '@/components/ui/AppIcon';
+import AirlineLogo from '@/components/ui/AirlineLogo';
 import { notices, airlines } from '@/app/notice-management/components/noticeData';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -562,7 +563,7 @@ export default function NoticeAckStatusContent() {
                                 className="w-9 h-9 rounded flex items-center justify-center font-bold flex-shrink-0"
                                 style={{ background: `${escColor}15`, border: `1px solid ${escColor}30`, color: escColor, fontFamily: "'Share Tech Mono', monospace", fontSize: '0.6rem' }}
                               >
-                                {a.iata}
+                                <AirlineLogo iata={a.iata} name={a.airline} size={32} className="rounded" />
                               </div>
                               <div>
                                 <p className="text-sm font-semibold" style={{ color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif" }}>{a.airline}</p>
@@ -755,7 +756,7 @@ export default function NoticeAckStatusContent() {
                               <div className="flex items-center justify-between gap-3 mb-3">
                                 <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 rounded flex items-center justify-center font-bold" style={{ background: `${escColor}15`, border: `1px solid ${escColor}30`, color: escColor, fontFamily: "'Share Tech Mono', monospace", fontSize: '0.65rem' }}>
-                                    {a.iata}
+                                    <AirlineLogo iata={a.iata} name={a.airline} size={36} className="rounded" />
                                   </div>
                                   <div>
                                     <p className="text-sm font-bold" style={{ color: 'var(--foreground)', fontFamily: "'Rajdhani', sans-serif" }}>{a.airline}</p>

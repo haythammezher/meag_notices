@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useMemo } from 'react';
 import Icon from '@/components/ui/AppIcon';
+import AirlineLogo from '@/components/ui/AirlineLogo';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -391,7 +392,7 @@ export default function DocumentationLibraryContent() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       {doc.airlineAccess.filter((a) => a.accessGranted).slice(0, 4).map((a) => (
-                        <span key={a.iata} className="text-2xs font-bold w-6 h-6 rounded flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.15)', color: 'var(--primary)' }} title={a.name}>{a.iata}</span>
+                        <AirlineLogo key={a.iata} iata={a.iata} name={a.name} size={24} />
                       ))}
                       {doc.airlineAccess.filter((a) => a.accessGranted).length > 4 && (
                         <span className="text-2xs" style={{ color: 'var(--muted-foreground)' }}>+{doc.airlineAccess.filter((a) => a.accessGranted).length - 4}</span>
@@ -622,7 +623,7 @@ function AccessTab({ airlineAccess }: { airlineAccess: AirlineAccess[] }) {
               <tr key={airline.iata} style={{ borderBottom: idx < airlineAccess.length - 1 ? '1px solid var(--border)' : 'none', background: 'var(--card)' }}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="text-xs font-bold w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--primary)' }}>{airline.iata}</span>
+                    <AirlineLogo iata={airline.iata} name={airline.name} size={32} className="rounded-lg" />
                     <span className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{airline.name}</span>
                   </div>
                 </td>
@@ -749,7 +750,7 @@ function UploadDrawer({ onClose }: { onClose: () => void }) {
               {allAirlines.map((airline) => (
                 <label key={airline.iata} className="flex items-center gap-3 cursor-pointer py-1.5 px-3 rounded-lg hover:bg-muted transition-colors">
                   <input type="checkbox" defaultChecked={airline.accessGranted} className="rounded" style={{ accentColor: 'var(--primary)' }} />
-                  <span className="text-xs font-bold w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--primary)' }}>{airline.iata}</span>
+                  <AirlineLogo iata={airline.iata} name={airline.name} size={28} className="rounded" />
                   <span className="text-sm" style={{ color: 'var(--foreground)' }}>{airline.name}</span>
                 </label>
               ))}

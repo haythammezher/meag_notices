@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Icon from '@/components/ui/AppIcon';
+import AirlineLogo from '@/components/ui/AirlineLogo';
 import { notices, airlines } from '@/app/notice-management/components/noticeData';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -578,7 +579,7 @@ function AirlineStatusTab({ activeNotices, onSelectNotice }: AirlineStatusTabPro
                   className="w-10 h-10 rounded flex items-center justify-center font-bold flex-shrink-0"
                   style={{ background: `${escColor}15`, border: `1px solid ${escColor}30`, color: escColor, fontFamily: "'Share Tech Mono', monospace", fontSize: '0.65rem' }}
                 >
-                  {summary.iata}
+                  <AirlineLogo iata={summary.iata} name={summary.airline} size={36} className="rounded" />
                 </div>
 
                 {/* Airline name + escalation */}
