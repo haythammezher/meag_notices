@@ -51,7 +51,7 @@ const setCookie = (name: string, value: string, options?: any) => {
 
 const deleteCookie = (name: string) => {
   if (typeof document === 'undefined') return;
-  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  const host = (typeof window !== 'undefined' && typeof window.location !== 'undefined') ? window.location.hostname : '';
   const domains = ['', host, host ? `.${host}` : ''].filter(Boolean);
   const variants = [
     'Path=/; SameSite=Lax',
@@ -71,9 +71,11 @@ const getToken = () =>
     c.name.includes('auth-token')
   )?.value ?? null;
 
-if (typeof window !== 'undefined' && !(window as any).__sb_patched__) {
+const patchFetch = () => {
+  if (typeof window === 'undefined' || (window as any).__sb_patched__) return;
   (window as any).__sb_patched__ = true;
   const orig = window.fetch.bind(window);
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   window.fetch = (input, init) => {
     const token = getToken();
     const url =
@@ -82,16 +84,15 @@ if (typeof window !== 'undefined' && !(window as any).__sb_patched__) {
         : input instanceof URL
         ? input.href
         : (input as Request).url;
-    if (
-      token &&
-      typeof window !== 'undefined' &&
-      (url.startsWith('/') || url.startsWith(window.location.origin))
-    ) {
+    const isSameOrigin =
+      typeof window !== 'undefined' && (url.startsWith('/') || url.startsWith(window.location.origin));
+    const isSupabaseCall = supabaseUrl && url.startsWith(supabaseUrl);
+    if (token && isSameOrigin && !isSupabaseCall) {
       init = { ...(init || {}), headers: { ...(init?.headers || {}), 'x-sb-token': token } };
     }
     return orig(input, init);
   };
-}
+};
 
 export function createClient() {
   return createBrowserClient(
@@ -102,6 +103,7 @@ export function createClient() {
         getAll: () => (canUseCookies() ? fromCookies() : fromStorage()),
         setAll(cookiesToSet) {
           if (typeof document === 'undefined') return;
+          patchFetch();
           if (canUseCookies()) {
             cookiesToSet.forEach(({ name, value, options }) =>
               value ? setCookie(name, value, options) : deleteCookie(name)
