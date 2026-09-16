@@ -590,13 +590,22 @@ function AccessTab({ airlineAccess }: { airlineAccess: AirlineAccess[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(34,197,94,0.12)', color: '#22C55E' }}>
-          {granted.length} Airlines with Access
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(34,197,94,0.12)', color: '#22C55E' }}>
+            {granted.length} Airlines with Access
+          </div>
+          <div className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(107,114,128,0.12)', color: '#9CA3AF' }}>
+            {denied.length} Restricted
+          </div>
         </div>
-        <div className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: 'rgba(107,114,128,0.12)', color: '#9CA3AF' }}>
-          {denied.length} Restricted
-        </div>
+        <button
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold flex-shrink-0 shadow-md transition-all hover:opacity-90 active:scale-95"
+          style={{ background: 'var(--primary)', color: '#000', boxShadow: '0 2px 8px rgba(245,158,11,0.4)' }}
+        >
+          <Icon name="PlusIcon" size={16} />
+          Add Airline
+        </button>
       </div>
 
       <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
