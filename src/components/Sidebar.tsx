@@ -25,6 +25,7 @@ const navItems: NavItem[] = [
   { id: 'nav-sf-hud', label: 'Safety Flash HUD', href: '/safety-flash-hud', icon: 'BoltIcon', group: 'Compliance', badgeVariant: 'critical' },
   { id: 'nav-receipts', label: 'Read Receipts', href: '/read-receipt-dashboard', icon: 'CheckCircleIcon', group: 'Compliance' },
   { id: 'nav-ack-tracker', label: 'Ack Tracker', href: '/acknowledgement-tracker', icon: 'FingerPrintIcon', group: 'Compliance' },
+  { id: 'nav-notice-ack-status', label: 'Notice Ack Status', href: '/notice-ack-status', icon: 'ClipboardDocumentCheckIcon', group: 'Compliance' },
   { id: 'nav-reports', label: 'Reporting Dashboard', href: '/reporting-dashboard', icon: 'ChartBarIcon', group: 'Compliance', hideForViewers: true },
   { id: 'nav-airline-compliance', label: 'Airline Compliance', href: '/airline-compliance-status', icon: 'BuildingOffice2Icon', group: 'Compliance' },
   { id: 'nav-audit', label: 'Compliance & Audit Export', href: '/compliance-audit-export', icon: 'ShieldCheckIcon', group: 'Compliance' },
