@@ -68,16 +68,16 @@ const documents: Document[] = [
     expiryDate: '2027-01-14',
     fileSize: '8.4 MB',
     fileType: 'PDF',
-    uploadedBy: 'Karim Abdallah',
+    uploadedBy: 'Haytham Mezher',
     lastModified: '2026-01-15',
     description: 'Comprehensive ground handling procedures for wide-body aircraft including A330, B777, and B787 operations at MEAG stations.',
     applicableAircraft: 'A330, B777, B787',
     airlineAccess: allAirlines.map((a) => ({ ...a })),
     versions: [
-      { version: 'v4.2', uploadedBy: 'Karim Abdallah', uploadedAt: '2026-01-15 10:00', fileSize: '8.4 MB', changeNote: 'Updated pushback procedures for B787. Added new de-icing section.', isCurrent: true },
+      { version: 'v4.2', uploadedBy: 'Haytham Mezher', uploadedAt: '2026-01-15 10:00', fileSize: '8.4 MB', changeNote: 'Updated pushback procedures for B787. Added new de-icing section.', isCurrent: true },
       { version: 'v4.1', uploadedBy: 'Sara Mansour', uploadedAt: '2025-09-01 14:30', fileSize: '8.1 MB', changeNote: 'Revised towing limits for A330neo variant.', isCurrent: false },
       { version: 'v4.0', uploadedBy: 'Ahmed Nour', uploadedAt: '2025-03-10 09:15', fileSize: '7.9 MB', changeNote: 'Major revision — incorporated IATA AHM 2025 updates.', isCurrent: false },
-      { version: 'v3.5', uploadedBy: 'Karim Abdallah', uploadedAt: '2024-07-22 11:00', fileSize: '7.4 MB', changeNote: 'Added cargo door procedures for B777F.', isCurrent: false },
+      { version: 'v3.5', uploadedBy: 'Haytham Mezher', uploadedAt: '2024-07-22 11:00', fileSize: '7.4 MB', changeNote: 'Added cargo door procedures for B777F.', isCurrent: false },
     ],
   },
   {
@@ -117,7 +117,7 @@ const documents: Document[] = [
     airlineAccess: allAirlines.slice(0, 5).map((a) => ({ ...a })),
     versions: [
       { version: 'v1.8', uploadedBy: 'Ahmed Nour', uploadedAt: '2026-08-20 15:45', fileSize: '5.7 MB', changeNote: 'Under review — pending approval for new bridge type at Terminal 2.', isCurrent: true },
-      { version: 'v1.7', uploadedBy: 'Karim Abdallah', uploadedAt: '2026-02-10 10:30', fileSize: '5.5 MB', changeNote: 'Updated emergency procedures.', isCurrent: false },
+      { version: 'v1.7', uploadedBy: 'Haytham Mezher', uploadedAt: '2026-02-10 10:30', fileSize: '5.5 MB', changeNote: 'Updated emergency procedures.', isCurrent: false },
     ],
   },
   {
@@ -131,12 +131,12 @@ const documents: Document[] = [
     expiryDate: '2026-12-31',
     fileSize: '12.1 MB',
     fileType: 'PDF',
-    uploadedBy: 'Karim Abdallah',
+    uploadedBy: 'Haytham Mezher',
     lastModified: '2026-01-01',
     description: 'IATA DGR-compliant acceptance, storage, and loading procedures for dangerous goods across all cargo and passenger operations.',
     airlineAccess: allAirlines.map((a) => ({ ...a })),
     versions: [
-      { version: 'v3.0', uploadedBy: 'Karim Abdallah', uploadedAt: '2026-01-01 00:00', fileSize: '12.1 MB', changeNote: 'Annual update per IATA DGR 67th Edition.', isCurrent: true },
+      { version: 'v3.0', uploadedBy: 'Haytham Mezher', uploadedAt: '2026-01-01 00:00', fileSize: '12.1 MB', changeNote: 'Annual update per IATA DGR 67th Edition.', isCurrent: true },
       { version: 'v2.9', uploadedBy: 'Sara Mansour', uploadedAt: '2025-01-01 00:00', fileSize: '11.8 MB', changeNote: 'Annual update per IATA DGR 66th Edition.', isCurrent: false },
     ],
   },
@@ -176,7 +176,7 @@ const documents: Document[] = [
     airlineAccess: allAirlines.slice(0, 3).map((a) => ({ ...a })),
     versions: [
       { version: 'v1.2', uploadedBy: 'Sara Mansour', uploadedAt: '2026-04-01 11:00', fileSize: '2.8 MB', changeNote: 'Updated per ECAA circular 2026-04.', isCurrent: true },
-      { version: 'v1.1', uploadedBy: 'Karim Abdallah', uploadedAt: '2026-01-10 09:00', fileSize: '2.6 MB', changeNote: 'Added new audit checklist appendix.', isCurrent: false },
+      { version: 'v1.1', uploadedBy: 'Haytham Mezher', uploadedAt: '2026-01-10 09:00', fileSize: '2.6 MB', changeNote: 'Added new audit checklist appendix.', isCurrent: false },
     ],
   },
   {
